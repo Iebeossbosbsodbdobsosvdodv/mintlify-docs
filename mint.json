@@ -1,0 +1,124 @@
+{
+  "name": "Zynx Wallet",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9488",
+    "light": "#07C983",
+    "dark": "#065F46",
+    "background": {
+      "light": "#FFFFFF",
+      "dark": "#0F172A"
+    }
+  },
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://dashboard.zynxwallet.com.br"
+  },
+  "anchors": [
+    {
+      "name": "Suporte",
+      "icon": "headphones",
+      "url": "https://t.me/zynxwallet_support"
+    },
+    {
+      "name": "Status",
+      "icon": "circle-check",
+      "url": "https://status.zynxwallet.com.br"
+    },
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/zynxwallet"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Bem-vindo",
+      "pages": [
+        "introduction"
+      ]
+    },
+    {
+      "group": "Começando",
+      "pages": [
+        "getting-started/overview",
+        "getting-started/authentication",
+        "getting-started/rate-limiting",
+        "getting-started/errors"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/introduction",
+        {
+          "group": "Pagamentos",
+          "pages": [
+            "api-reference/payments/create",
+            "api-reference/payments/get",
+            "api-reference/payments/list",
+            "api-reference/payments/cancel"
+          ]
+        },
+        {
+          "group": "Saques",
+          "pages": [
+            "api-reference/withdrawals/create",
+            "api-reference/withdrawals/get",
+            "api-reference/withdrawals/list"
+          ]
+        },
+        {
+          "group": "Transferências",
+          "pages": [
+            "api-reference/transfers/create",
+            "api-reference/transfers/list"
+          ]
+        },
+        {
+          "group": "Conta",
+          "pages": [
+            "api-reference/account/balance",
+            "api-reference/account/info"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "pages": [
+        "webhooks/overview",
+        "webhooks/events",
+        "webhooks/testing"
+      ]
+    },
+    {
+      "group": "Guias",
+      "pages": [
+        "guides/pix-integration",
+        "guides/qr-code",
+        "guides/webhook-integration",
+        "guides/security-best-practices",
+        "guides/error-handling"
+      ]
+    },
+    {
+      "group": "Recursos",
+      "pages": [
+        "resources/faq",
+        "resources/glossary",
+        "resources/changelog"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/zynxwallet",
+    "github": "https://github.com/zynxwallet",
+    "linkedin": "https://linkedin.com/company/zynxwallet",
+    "telegram": "https://t.me/zynxwallet"
+  }
+}
