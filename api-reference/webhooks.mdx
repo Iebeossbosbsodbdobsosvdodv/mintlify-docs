@@ -1,0 +1,142 @@
+---
+title: Webhooks
+description: Receba notificações em tempo real
+---
+
+# Webhooks
+
+Receba notificações em tempo real sobre eventos importantes na sua conta.
+
+## O que são Webhooks?
+
+Webhooks são notificações automáticas enviadas pela Zynx Wallet para sua aplicação quando eventos importantes ocorrem, como pagamentos completados ou saques processados.
+
+## Configurar Webhook
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Webhooks"
+3. Clique em "Adicionar Webhook"
+4. Insira sua URL: `https://seu-dominio.com/webhook`
+5. Selecione os eventos que deseja receber
+6. Salve
+
+## Eventos Disponíveis
+
+| Evento | Descrição |
+|--------|-----------|
+| `payment.completed` | Pagamento foi completado |
+| `payment.expired` | QR Code expirou |
+| `payment.cancelled` | Pagamento foi cancelado |
+| `withdrawal.completed` | Saque foi processado |
+| `withdrawal.failed` | Saque falhou |
+| `transfer.completed` | Transferência foi concluída |
+
+## Estrutura do Webhook
+
+```json
+{
+  "id": "evt_1234567890",
+  "type": "payment.completed",
+  "timestamp": "2024-02-10T15:30:00Z",
+  "data": {
+    "id": "pay_1234567890",
+    "amount": 150.50,
+    "status": "completed",
+    "paid_at": "2024-02-10T15:25:00Z"
+  }
+}
+```
+
+## Validar Assinatura
+
+Cada webhook inclui um header `X-Zynx-Signature` com uma assinatura HMAC-SHA256:
+
+```javascript
+const crypto = require('crypto');
+
+function validateWebhook(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return hash === signature;
+}
+
+app.post('/webhook', (req, res) => {
+  const signature = req.headers['x-zynx-signature'];
+  const secret = process.env.ZYNX_WEBHOOK_SECRET;
+  
+  if (!validateWebhook(req.body, signature, secret)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // Processar webhook
+  res.json({ success: true });
+});
+```
+
+## Exemplo de Implementação
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+  
+  console.log(`Evento recebido: ${event.type}`);
+  
+  // Responder rapidamente
+  res.json({ success: true });
+  
+  // Processar de forma assíncrona
+  handleEvent(event).catch(err => {
+    console.error('Erro ao processar webhook:', err);
+  });
+});
+
+async function handleEvent(event) {
+  switch (event.type) {
+    case 'payment.completed':
+      console.log(`Pagamento ${event.data.id} completado!`);
+      // Seu código aqui
+      break;
+    case 'withdrawal.completed':
+      console.log(`Saque ${event.data.id} processado!`);
+      // Seu código aqui
+      break;
+  }
+}
+
+app.listen(3000);
+```
+
+## Boas Práticas
+
+1. **Responda rapidamente**: Retorne um status 200 imediatamente
+2. **Processe de forma assíncrona**: Use filas ou workers para processamento pesado
+3. **Implemente idempotência**: Processe o mesmo evento apenas uma vez
+4. **Valide assinatura**: Sempre valide a assinatura do webhook
+5. **Use HTTPS**: Sempre configure webhooks com HTTPS
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Criar Pagamento"
+    icon="credit-card"
+    href="/api-reference/payments/create"
+  >
+    Crie um novo pagamento
+  </Card>
+  <Card
+    title="Suporte"
+    icon="headphones"
+    href="https://t.me/zynxwallet_support"
+  >
+    Precisa de ajuda?
+  </Card>
+</CardGroup>

@@ -1,0 +1,79 @@
+---
+title: Buscar Saque
+description: Obtenha detalhes de um saque específico
+---
+
+# Buscar Saque
+
+Obtenha detalhes de um saque específico.
+
+## Endpoint
+
+```
+GET https://api.zynxwallet.com.br/v1/withdrawals/{id}
+```
+
+## Autenticação
+
+Requer API Key no header:
+
+```
+X-API-Key: sua_api_key_aqui
+```
+
+## Exemplo de Requisição
+
+```javascript
+const withdrawalId = 'wd_1234567890';
+
+const response = await fetch(
+  `https://api.zynxwallet.com.br/v1/withdrawals/${withdrawalId}`,
+  {
+    method: 'GET',
+    headers: {
+      'X-API-Key': 'sua_api_key_aqui'
+    }
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+## Resposta
+
+### Sucesso (200)
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "wd_1234567890",
+    "amount": 500.00,
+    "status": "completed",
+    "bank_account_id": "acc_1234567890",
+    "description": "Saque mensal",
+    "created_at": "2024-02-10T15:30:00Z",
+    "completed_at": "2024-02-12T10:00:00Z"
+  }
+}
+```
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Listar Saques"
+    icon="list"
+    href="/api-reference/withdrawals/list"
+  >
+    Liste todos os saques
+  </Card>
+  <Card
+    title="Criar Saque"
+    icon="plus"
+    href="/api-reference/withdrawals/create"
+  >
+    Crie um novo saque
+  </Card>
+</CardGroup>

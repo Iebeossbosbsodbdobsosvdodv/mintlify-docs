@@ -19,6 +19,6 @@
   "author": "Zynx Wallet",
   "license": "MIT",
   "devDependencies": {
-    "mintlify": "^4.2.337"
+    "mintlify": "^4.0.0"
   }
 }

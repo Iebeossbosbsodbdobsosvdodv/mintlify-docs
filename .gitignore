@@ -1,35 +1,21 @@
-# Dependencies
 node_modules/
 npm-debug.log
 yarn-error.log
-
-# Build outputs
+.mintlify/
+.mintlify-cache/
 dist/
 build/
 .next/
-
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
-
-# Environment
 .env
 .env.local
 .env.*.local
-
-# Mintlify
-.mintlify/
-.mintlify-cache/
-
-# OS
 Thumbs.db
-.DS_Store
-
-# Temporary files
 *.tmp
 *.temp
 *.bak
