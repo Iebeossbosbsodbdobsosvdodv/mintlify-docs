@@ -365,5 +365,46 @@
         ]
       }
     }
+,
+    "/webhooks": {
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Webhooks",
+        "description": "Configure webhooks para receber notificações em tempo real",
+        "operationId": "configureWebhooks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "URL para receber notificações"
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook configurado com sucesso"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    }
   }
 }

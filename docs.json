@@ -32,50 +32,8 @@
         "tab": "Referência da API",
         "groups": [
           {
-            "group": "OpenAPI",
+            "group": "Endpoints",
             "openapi": "openapi.json"
-          },
-          {
-            "group": "Documentação",
-            "pages": [
-              "api-reference/overview",
-              "api-reference/rate-limiting"
-            ]
-          },
-          {
-            "group": "Pagamentos",
-            "pages": [
-              "api-reference/payments-create",
-              "api-reference/payments-retrieve",
-              "api-reference/payments-list"
-            ]
-          },
-          {
-            "group": "Saques",
-            "pages": [
-              "api-reference/withdrawals-create",
-              "api-reference/withdrawals-retrieve",
-              "api-reference/withdrawals-list"
-            ]
-          },
-          {
-            "group": "Transferências",
-            "pages": [
-              "api-reference/transfers-create",
-              "api-reference/transfers-list"
-            ]
-          },
-          {
-            "group": "Conta",
-            "pages": [
-              "api-reference/account-balance"
-            ]
-          },
-          {
-            "group": "Webhooks",
-            "pages": [
-              "api-reference/webhooks"
-            ]
           }
         ]
       }
