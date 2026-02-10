@@ -14,45 +14,62 @@
     "auth": "key"
   },
   "openapi": "/openapi.json",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Documentação",
-        "groups": [
-          {
-            "group": "Primeiros Passos",
-            "pages": [
-              "index",
-              "about"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API",
-        "groups": [
-          {
-            "group": "Referência",
-            "openapi": "openapi.json"
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Discord",
-          "href": "https://discord.gg/zynxwallet",
-          "icon": "message-circle"
-        },
-        {
-          "anchor": "Dashboard",
-          "href": "https://zynxwallet.com.br/dashboard",
-          "icon": "square-terminal"
-        }
+  "navigation": [
+    {
+      "group": "Documentação",
+      "pages": [
+        "index",
+        "about"
+      ]
+    },
+    {
+      "group": "API",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/rate-limiting"
+      ]
+    },
+    {
+      "group": "Pagamentos",
+      "openapi": "openapi.json",
+      "operations": [
+        "post /v1/payments",
+        "get /v1/payments/{id}",
+        "get /v1/payments/list"
+      ]
+    },
+    {
+      "group": "Saques",
+      "openapi": "openapi.json",
+      "operations": [
+        "post /v1/withdrawals",
+        "get /v1/withdrawals/{id}",
+        "get /v1/withdrawals/list"
+      ]
+    },
+    {
+      "group": "Transferências",
+      "openapi": "openapi.json",
+      "operations": [
+        "post /v1/transfers",
+        "get /v1/transfers/list"
+      ]
+    },
+    {
+      "group": "Conta",
+      "openapi": "openapi.json",
+      "operations": [
+        "get /v1/account/balance"
+      ]
+    },
+    {
+      "group": "Webhooks",
+      "openapi": "openapi.json",
+      "operations": [
+        "post /webhooks"
       ]
     }
-  },
+  ],
   "navbar": {
     "links": [
       {

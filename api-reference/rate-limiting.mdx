@@ -1,0 +1,247 @@
+---
+title: Rate Limiting
+description: Entenda como funciona o rate limiting na API Zynx Wallet
+---
+
+# Rate Limiting
+
+A API Zynx Wallet implementa rate limiting para garantir estabilidade, segurança e uso justo dos recursos.
+
+## Visão Geral
+
+Diferentes tipos de rotas têm limites diferentes baseados no método de autenticação.
+
+## Limites por Tipo de Rota
+
+### Rotas Autenticadas (com API Key)
+
+Rotas que requerem autenticação via API Key têm os seguintes limites:
+
+| Métrica | Valor |
+|---------|-------|
+| Limite | 25 requisições por segundo |
+| Equivalente | 1500 requisições por minuto |
+| Janela | 1 minuto |
+| Identificador | API Key |
+
+O rate limit é aplicado por API Key, permitindo que você tenha múltiplas API Keys para aumentar sua capacidade total.
+
+## Headers de Rate Limit
+
+Todas as respostas incluem headers informativos sobre o rate limit:
+
+```
+X-RateLimit-Limit: 1500
+X-RateLimit-Remaining: 1497
+X-RateLimit-Reset: 1698765432
+```
+
+| Header | Descrição |
+|--------|-----------|
+| X-RateLimit-Limit | O número máximo de requisições permitidas na janela de tempo atual |
+| X-RateLimit-Remaining | O número de requisições restantes na janela de tempo atual |
+| X-RateLimit-Reset | Timestamp Unix (segundos) indicando quando a janela será resetada |
+
+## Resposta 429 (Too Many Requests)
+
+Quando o rate limit é excedido, você receberá uma resposta HTTP 429:
+
+```json
+{
+  "success": false,
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Please try again in 5 seconds",
+  "retryAfter": 5
+}
+```
+
+## Estratégias para Lidar com Rate Limiting
+
+### 1. Implementar Backoff Exponencial
+
+Quando receber um erro 429, implemente backoff exponencial antes de tentar novamente:
+
+<Tabs>
+  <Tab title="Node.js">
+```javascript
+async function makeRequestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        const data = await response.json();
+        const waitTime = data.retryAfter || Math.pow(2, attempt);
+        console.log(`Rate limited. Waiting ${waitTime} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
+  }
+}
+```
+  </Tab>
+  <Tab title="Python">
+```python
+import time
+import requests
+
+def make_request_with_retry(url, headers, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code == 429:
+                data = response.json()
+                wait_time = data.get('retryAfter', 2 ** attempt)
+                print(f"Rate limited. Waiting {wait_time} seconds...")
+                time.sleep(wait_time)
+                continue
+            
+            return response
+        except Exception as error:
+            if attempt == max_retries - 1:
+                raise error
+            time.sleep(2 ** attempt)
+```
+  </Tab>
+</Tabs>
+
+### 2. Monitorar Headers de Rate Limit
+
+Monitore os headers `X-RateLimit-Remaining` para evitar atingir o limite:
+
+<Tabs>
+  <Tab title="Node.js">
+```javascript
+async function makeRequest(url, apiKey) {
+  const response = await fetch(url, {
+    headers: {
+      'X-API-Key': apiKey
+    }
+  });
+  
+  const remaining = parseInt(response.headers.get('X-RateLimit-Remaining'));
+  const resetTime = parseInt(response.headers.get('X-RateLimit-Reset'));
+  
+  if (remaining < 2) {
+    const waitTime = resetTime - Math.floor(Date.now() / 1000);
+    console.log(`Rate limit quase esgotado. Aguardando ${waitTime} segundos...`);
+    await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+  }
+  
+  return response;
+}
+```
+  </Tab>
+  <Tab title="Python">
+```python
+import requests
+import time
+
+def make_request(url, api_key):
+    response = requests.get(url, headers={'X-API-Key': api_key})
+    
+    remaining = int(response.headers.get('X-RateLimit-Remaining', 0))
+    reset_time = int(response.headers.get('X-RateLimit-Reset', 0))
+    
+    if remaining < 2:
+        wait_time = reset_time - int(time.time())
+        print(f"Rate limit quase esgotado. Aguardando {wait_time} segundos...")
+        time.sleep(wait_time)
+    
+    return response
+```
+  </Tab>
+</Tabs>
+
+### 3. Usar Cache Quando Possível
+
+Algumas rotas têm cache implementado. Use essas rotas para reduzir o número de requisições:
+
+- `GET /v1/payments/list` - Cache de 60 segundos
+- `GET /v1/withdrawals/list` - Cache de 60 segundos
+- `GET /v1/account/balance` - Cache variável
+
+### 4. Agrupar Operações
+
+Em vez de fazer múltiplas requisições individuais, use endpoints de listagem quando possível:
+
+**Ineficiente:**
+```
+# 10 requisições individuais
+GET /v1/payments/1
+GET /v1/payments/2
+# ... mais 8 requisições
+```
+
+**Eficiente:**
+```
+# 1 requisição para listar todos
+GET /v1/payments/list?limit=10
+```
+
+### 5. Usar Múltiplas API Keys
+
+Se você precisa de maior capacidade, crie múltiplas API Keys e distribua as requisições entre elas:
+
+<Tabs>
+  <Tab title="Node.js">
+```javascript
+const apiKeys = [
+  'vw_live_key1...',
+  'vw_live_key2...',
+  'vw_live_key3...'
+];
+
+let currentKeyIndex = 0;
+
+function getNextApiKey() {
+  const key = apiKeys[currentKeyIndex];
+  currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+  return key;
+}
+
+async function makeRequest(url) {
+  const apiKey = getNextApiKey();
+  return fetch(url, {
+    headers: { 'X-API-Key': apiKey }
+  });
+}
+```
+  </Tab>
+  <Tab title="Python">
+```python
+api_keys = [
+    'vw_live_key1...',
+    'vw_live_key2...',
+    'vw_live_key3...'
+]
+
+current_key_index = 0
+
+def get_next_api_key():
+    global current_key_index
+    key = api_keys[current_key_index]
+    current_key_index = (current_key_index + 1) % len(api_keys)
+    return key
+
+def make_request(url):
+    api_key = get_next_api_key()
+    return requests.get(url, headers={'X-API-Key': api_key})
+```
+  </Tab>
+</Tabs>
+
+## Boas Práticas
+
+- **Sempre monitore os headers de rate limit**: Use `X-RateLimit-Remaining` para saber quantas requisições você ainda pode fazer
+- **Implemente retry com backoff**: Não faça requisições imediatamente após receber 429. Aguarde o tempo indicado em `retryAfter`
+- **Use cache quando possível**: Reduza o número de requisições usando dados em cache
+- **Agrupe operações**: Use endpoints de listagem em vez de múltiplas requisições individuais
+- **Teste em ambiente de desenvolvimento primeiro**: Entenda os limites antes de fazer deploy em produção
