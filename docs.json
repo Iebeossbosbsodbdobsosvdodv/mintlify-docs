@@ -1,14 +1,14 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Zynx Docs",
-  "colors": {
-    "primary": "#0D9488",
-    "light": "#07C983",
-    "dark": "#065F46"
-  },
-  "favicon": "/favicon.svg",
+  "name": "Zynx Wallet",
   "logo": "/logo/light.svg",
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#374151",
+    "light": "#4B5563",
+    "dark": "#1F2937"
+  },
   "api": {
     "baseUrl": "https://api.zynxwallet.com.br",
     "auth": "key"
@@ -20,7 +20,7 @@
         "tab": "Documentação",
         "groups": [
           {
-            "group": "Começando",
+            "group": "Primeiros Passos",
             "pages": [
               "index",
               "about"
@@ -29,10 +29,10 @@
         ]
       },
       {
-        "tab": "Referência da API",
+        "tab": "API",
         "groups": [
           {
-            "group": "Endpoints",
+            "group": "Referência",
             "openapi": "openapi.json"
           }
         ]
@@ -41,13 +41,13 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Suporte",
-          "href": "https://t.me/zynxwallet_support",
-          "icon": "headphones"
+          "anchor": "Discord",
+          "href": "https://discord.gg/zynxwallet",
+          "icon": "message-circle"
         },
         {
           "anchor": "Dashboard",
-          "href": "https://dashboard.zynxwallet.com.br",
+          "href": "https://zynxwallet.com.br/dashboard",
           "icon": "square-terminal"
         }
       ]
@@ -56,14 +56,18 @@
   "navbar": {
     "links": [
       {
-        "label": "Suporte",
-        "href": "https://t.me/zynxwallet_support"
+        "label": "Página Principal",
+        "href": "https://zynxwallet.com.br"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/zynxwallet"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.zynxwallet.com.br"
+      "href": "https://zynxwallet.com.br/dashboard"
     }
   },
   "footer": {
