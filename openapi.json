@@ -280,7 +280,7 @@
       }
     },
     "/webhooks": {
-      "post": {
+      "hook": {
         "tags": ["Webhooks"],
         "summary": "Webhooks",
         "description": "Configure webhooks para receber notificações",
