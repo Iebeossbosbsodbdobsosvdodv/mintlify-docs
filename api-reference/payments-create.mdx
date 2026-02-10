@@ -3,7 +3,7 @@ title: Criar Pagamento
 description: Crie uma nova transação PIX
 ---
 
-# Criar Pagamento
+# <span style="color: #10B981">POST</span> Criar Pagamento
 
 Crie uma nova transação PIX na Zynx Wallet.
 
@@ -23,6 +23,8 @@ POST https://api.zynxwallet.com.br/v1/payments
 
 ## Exemplo de Requisição
 
+<Tabs>
+  <Tab title="JavaScript">
 ```javascript
 const response = await fetch('https://api.zynxwallet.com.br/v1/payments', {
   method: 'POST',
@@ -40,6 +42,39 @@ const response = await fetch('https://api.zynxwallet.com.br/v1/payments', {
 const data = await response.json();
 console.log(data);
 ```
+  </Tab>
+  <Tab title="Python">
+```python
+import requests
+
+response = requests.post(
+  'https://api.zynxwallet.com.br/v1/payments',
+  headers={
+    'X-API-Key': 'sua_api_key_aqui'
+  },
+  json={
+    'amount': 150.50,
+    'description': 'Compra de produtos',
+    'customer_email': 'cliente@example.com'
+  }
+)
+
+print(response.json())
+```
+  </Tab>
+  <Tab title="cURL">
+```bash
+curl -X POST https://api.zynxwallet.com.br/v1/payments \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: sua_api_key_aqui" \
+  -d '{
+    "amount": 150.50,
+    "description": "Compra de produtos",
+    "customer_email": "cliente@example.com"
+  }'
+```
+  </Tab>
+</Tabs>
 
 ## Resposta
 
@@ -58,3 +93,12 @@ console.log(data);
   }
 }
 ```
+
+## Códigos de Erro
+
+| Código | Descrição |
+|--------|----------|
+| `invalid_amount` | Valor inválido |
+| `invalid_description` | Descrição inválida |
+| `rate_limit_exceeded` | Limite de requisições atingido |
+| `unauthorized` | API Key inválida |
