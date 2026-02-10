@@ -9,6 +9,11 @@
   },
   "favicon": "/favicon.svg",
   "logo": "/logo/light.svg",
+  "api": {
+    "baseUrl": "https://api.zynxwallet.com.br",
+    "auth": "key"
+  },
+  "openapi": "/openapi.json",
   "navigation": {
     "tabs": [
       {
@@ -27,7 +32,11 @@
         "tab": "Referência da API",
         "groups": [
           {
-            "group": "API",
+            "group": "OpenAPI",
+            "openapi": "openapi.json"
+          },
+          {
+            "group": "Documentação",
             "pages": [
               "api-reference/overview",
               "api-reference/rate-limiting"

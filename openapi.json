@@ -1,0 +1,369 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Zynx Wallet API",
+    "version": "1.0.0",
+    "description": "API de pagamentos digitais com privacidade total"
+  },
+  "servers": [
+    {
+      "url": "https://api.zynxwallet.com.br",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  },
+  "paths": {
+    "/v1/payments": {
+      "post": {
+        "tags": ["Pagamentos"],
+        "summary": "Criar Pagamento",
+        "description": "Crie uma nova transação PIX na Zynx Wallet",
+        "operationId": "createPayment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "description": "Valor em reais",
+                    "example": 150.50
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição da transação",
+                    "example": "Compra de produtos"
+                  },
+                  "customer_email": {
+                    "type": "string",
+                    "description": "Email do cliente",
+                    "example": "cliente@example.com"
+                  }
+                },
+                "required": ["amount", "description"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pagamento criado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "pay_1234567890"
+                        },
+                        "amount": {
+                          "type": "number",
+                          "example": 150.50
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "pending"
+                        },
+                        "qr_code_url": {
+                          "type": "string",
+                          "example": "https://api.zynxwallet.com.br/qr/pay_1234567890.png"
+                        },
+                        "expires_at": {
+                          "type": "string",
+                          "example": "2024-02-11T15:30:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": ["Pagamentos"],
+        "summary": "Listar Pagamentos",
+        "description": "Liste todos os pagamentos da sua conta",
+        "operationId": "listPayments",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número de resultados",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Deslocamento para paginação",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pagamentos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "total": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/payments/{id}": {
+      "get": {
+        "tags": ["Pagamentos"],
+        "summary": "Buscar Pagamento",
+        "description": "Obtenha detalhes de um pagamento específico",
+        "operationId": "getPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID do pagamento",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes do pagamento",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/withdrawals": {
+      "post": {
+        "tags": ["Saques"],
+        "summary": "Criar Saque",
+        "description": "Solicite um saque para sua conta bancária",
+        "operationId": "createWithdrawal",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "description": "Valor em reais"
+                  },
+                  "bank_account_id": {
+                    "type": "string",
+                    "description": "ID da conta bancária"
+                  }
+                },
+                "required": ["amount", "bank_account_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saque criado com sucesso"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": ["Saques"],
+        "summary": "Listar Saques",
+        "description": "Liste todos os saques da sua conta",
+        "operationId": "listWithdrawals",
+        "responses": {
+          "200": {
+            "description": "Lista de saques"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/withdrawals/{id}": {
+      "get": {
+        "tags": ["Saques"],
+        "summary": "Buscar Saque",
+        "description": "Obtenha detalhes de um saque específico",
+        "operationId": "getWithdrawal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalhes do saque"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/transfers": {
+      "post": {
+        "tags": ["Transferências"],
+        "summary": "Transferência Interna",
+        "description": "Transfira saldo entre usuários Zynx Wallet",
+        "operationId": "createTransfer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number"
+                  },
+                  "recipient_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["amount", "recipient_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transferência criada com sucesso"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": ["Transferências"],
+        "summary": "Listar Transferências",
+        "description": "Liste todas as transferências da sua conta",
+        "operationId": "listTransfers",
+        "responses": {
+          "200": {
+            "description": "Lista de transferências"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/account/balance": {
+      "get": {
+        "tags": ["Conta"],
+        "summary": "Consultar Saldo",
+        "description": "Obtenha o saldo da sua conta Zynx Wallet",
+        "operationId": "getBalance",
+        "responses": {
+          "200": {
+            "description": "Saldo da conta"
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
