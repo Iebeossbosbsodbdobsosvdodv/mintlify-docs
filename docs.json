@@ -1,0 +1,112 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Zynx Wallet",
+  "colors": {
+    "primary": "#0D9488",
+    "light": "#07C983",
+    "dark": "#065F46"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentação",
+        "groups": [
+          {
+            "group": "Começando",
+            "pages": [
+              "index",
+              "about"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Referência da API",
+        "groups": [
+          {
+            "group": "API",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/rate-limiting"
+            ]
+          },
+          {
+            "group": "Pagamentos",
+            "pages": [
+              "api-reference/payments-create",
+              "api-reference/payments-retrieve",
+              "api-reference/payments-list"
+            ]
+          },
+          {
+            "group": "Saques",
+            "pages": [
+              "api-reference/withdrawals-create",
+              "api-reference/withdrawals-retrieve",
+              "api-reference/withdrawals-list"
+            ]
+          },
+          {
+            "group": "Transferências",
+            "pages": [
+              "api-reference/transfers-create",
+              "api-reference/transfers-list"
+            ]
+          },
+          {
+            "group": "Conta",
+            "pages": [
+              "api-reference/account-balance"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api-reference/webhooks"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Suporte",
+          "href": "https://t.me/zynxwallet_support",
+          "icon": "headphones"
+        },
+        {
+          "anchor": "Dashboard",
+          "href": "https://dashboard.zynxwallet.com.br",
+          "icon": "square-terminal"
+        }
+      ]
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Suporte",
+        "href": "https://t.me/zynxwallet_support"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://dashboard.zynxwallet.com.br"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://twitter.com/zynxwallet",
+      "github": "https://github.com/zynxwallet",
+      "linkedin": "https://linkedin.com/company/zynxwallet"
+    }
+  }
+}

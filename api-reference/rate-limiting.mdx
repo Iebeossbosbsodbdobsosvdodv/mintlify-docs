@@ -1,15 +1,11 @@
 ---
 title: Rate Limiting
-description: Entenda como funciona o rate limiting da API
+description: Entenda como funciona o rate limiting
 ---
 
 # Rate Limiting
 
 Entenda como funciona o rate limiting da API Zynx Wallet.
-
-## O que é Rate Limiting?
-
-Rate Limiting é um mecanismo de proteção que limita o número de requisições que você pode fazer à API em um período de tempo específico. Isso garante que a API permaneça disponível e responsiva para todos os usuários.
 
 ## Limites Padrão
 
@@ -31,10 +27,6 @@ X-RateLimit-Remaining: 45
 X-RateLimit-Reset: 1644234567
 ```
 
-- **X-RateLimit-Limit**: Número máximo de requisições permitidas
-- **X-RateLimit-Remaining**: Número de requisições restantes
-- **X-RateLimit-Reset**: Timestamp Unix quando o limite será resetado
-
 ## Tratando Rate Limiting
 
 Quando você atinge o limite, a API retorna um erro 429 (Too Many Requests):
@@ -43,130 +35,14 @@ Quando você atinge o limite, a API retorna um erro 429 (Too Many Requests):
 {
   "success": false,
   "error": "rate_limit_exceeded",
-  "message": "Você atingiu o limite de requisições. Tente novamente em 60 segundos.",
+  "message": "Você atingiu o limite de requisições.",
   "retry_after": 60
-}
-```
-
-### Implementar Retry com Backoff Exponencial
-
-```javascript
-async function makeRequest(url, options, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-      
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After') || 60;
-        console.log(`Rate limit. Aguardando ${retryAfter}s...`);
-        
-        if (attempt < maxRetries - 1) {
-          await new Promise(resolve => 
-            setTimeout(resolve, retryAfter * 1000)
-          );
-          continue;
-        }
-      }
-      
-      return response.json();
-    } catch (error) {
-      if (attempt === maxRetries - 1) {
-        throw error;
-      }
-      
-      const delay = Math.pow(2, attempt) * 1000;
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
 }
 ```
 
 ## Boas Práticas
 
-### 1. Cache de Respostas
-
-Armazene respostas em cache para evitar requisições desnecessárias:
-
-```javascript
-const cache = new Map();
-
-async function getPayment(paymentId) {
-  if (cache.has(paymentId)) {
-    return cache.get(paymentId);
-  }
-  
-  const payment = await fetch(`/api/payments/${paymentId}`);
-  cache.set(paymentId, payment);
-  
-  return payment;
-}
-```
-
-### 2. Batch Requests
-
-Agrupe múltiplas operações em uma única requisição quando possível.
-
-### 3. Monitorar Uso
-
-Acompanhe seus headers de rate limiting para antecipar limites:
-
-```javascript
-const remaining = response.headers.get('X-RateLimit-Remaining');
-if (remaining < 10) {
-  console.warn('Aproximando-se do limite de requisições');
-}
-```
-
-### 4. Implementar Fila
-
-Para operações em lote, implemente uma fila com delay:
-
-```javascript
-class RequestQueue {
-  constructor(delayMs = 100) {
-    this.queue = [];
-    this.delayMs = delayMs;
-  }
-  
-  async add(fn) {
-    this.queue.push(fn);
-    return this.process();
-  }
-  
-  async process() {
-    while (this.queue.length > 0) {
-      const fn = this.queue.shift();
-      await fn();
-      await new Promise(resolve => 
-        setTimeout(resolve, this.delayMs)
-      );
-    }
-  }
-}
-```
-
-## Aumentar Limite
-
-Se você precisa de um limite maior, entre em contato com nosso suporte:
-
-- **Email**: [suporte@zynxwallet.com.br](mailto:suporte@zynxwallet.com.br)
-- **Telegram**: [@zynxwallet_support](https://t.me/zynxwallet_support)
-
-## Próximos Passos
-
-<CardGroup cols={2}>
-  <Card
-    title="Pagamentos"
-    icon="credit-card"
-    href="/api-reference/payments/create"
-  >
-    Comece a criar transações
-  </Card>
-  <Card
-    title="Tratamento de Erros"
-    icon="triangle-exclamation"
-    href="/api-reference/errors"
-  >
-    Aprenda a tratar erros
-  </Card>
-</CardGroup>
+1. **Cache de Respostas**: Armazene respostas em cache para evitar requisições desnecessárias
+2. **Batch Requests**: Agrupe múltiplas operações em uma única requisição quando possível
+3. **Monitorar Uso**: Acompanhe seus headers de rate limiting
+4. **Implementar Fila**: Para operações em lote, implemente uma fila com delay

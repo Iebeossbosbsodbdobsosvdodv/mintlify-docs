@@ -13,14 +13,6 @@ Obtenha o saldo da sua conta Zynx Wallet.
 GET https://api.zynxwallet.com.br/v1/account/balance
 ```
 
-## Autenticação
-
-Requer API Key no header:
-
-```
-X-API-Key: sua_api_key_aqui
-```
-
 ## Exemplo de Requisição
 
 ```javascript
@@ -38,22 +30,7 @@ const data = await response.json();
 console.log(data);
 ```
 
-```python
-import requests
-
-response = requests.get(
-  'https://api.zynxwallet.com.br/v1/account/balance',
-  headers={
-    'X-API-Key': 'sua_api_key_aqui'
-  }
-)
-
-print(response.json())
-```
-
 ## Resposta
-
-### Sucesso (200)
 
 ```json
 {
@@ -72,23 +49,4 @@ print(response.json())
 |-------|------|-----------|
 | `balance` | number | Saldo em reais |
 | `currency` | string | Moeda (sempre BRL) |
-| `last_updated` | string | Última atualização (ISO 8601) |
-
-## Próximos Passos
-
-<CardGroup cols={2}>
-  <Card
-    title="Criar Pagamento"
-    icon="credit-card"
-    href="/api-reference/payments/create"
-  >
-    Crie um novo pagamento
-  </Card>
-  <Card
-    title="Criar Saque"
-    icon="arrow-down"
-    href="/api-reference/withdrawals/create"
-  >
-    Solicite um saque
-  </Card>
-</CardGroup>
+| `last_updated` | string | Última atualização |

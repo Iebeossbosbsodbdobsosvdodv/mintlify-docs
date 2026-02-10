@@ -13,20 +13,12 @@ Liste todas as transferências da sua conta.
 GET https://api.zynxwallet.com.br/v1/transfers
 ```
 
-## Autenticação
-
-Requer API Key no header:
-
-```
-X-API-Key: sua_api_key_aqui
-```
-
 ## Parâmetros
 
-| Parâmetro | Tipo | Obrigatório | Descrição |
-|-----------|------|-------------|-----------|
-| `limit` | number | Não | Número de resultados (padrão: 10) |
-| `offset` | number | Não | Deslocamento para paginação |
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `limit` | number | Número de resultados (padrão: 10) |
+| `offset` | number | Deslocamento para paginação |
 
 ## Exemplo de Requisição
 
@@ -47,8 +39,6 @@ console.log(data);
 
 ## Resposta
 
-### Sucesso (200)
-
 ```json
 {
   "success": true,
@@ -68,22 +58,3 @@ console.log(data);
   }
 }
 ```
-
-## Próximos Passos
-
-<CardGroup cols={2}>
-  <Card
-    title="Criar Transferência"
-    icon="plus"
-    href="/api-reference/transfers/create"
-  >
-    Crie uma nova transferência
-  </Card>
-  <Card
-    title="Saldo"
-    icon="wallet"
-    href="/api-reference/account/balance"
-  >
-    Consulte seu saldo
-  </Card>
-</CardGroup>

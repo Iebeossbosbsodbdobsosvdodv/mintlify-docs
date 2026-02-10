@@ -1,0 +1,61 @@
+---
+title: Listar Pagamentos
+description: Liste todos os pagamentos
+---
+
+# Listar Pagamentos
+
+Liste todos os pagamentos da sua conta.
+
+## Endpoint
+
+```
+GET https://api.zynxwallet.com.br/v1/payments
+```
+
+## Parâmetros
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `limit` | number | Número de resultados (padrão: 10) |
+| `offset` | number | Deslocamento para paginação |
+| `status` | string | Filtrar por status |
+
+## Exemplo de Requisição
+
+```javascript
+const response = await fetch(
+  'https://api.zynxwallet.com.br/v1/payments?limit=10&status=completed',
+  {
+    method: 'GET',
+    headers: {
+      'X-API-Key': 'sua_api_key_aqui'
+    }
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+## Resposta
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "pay_1234567890",
+        "amount": 150.50,
+        "description": "Compra de produtos",
+        "status": "completed",
+        "paid_at": "2024-02-10T15:25:00Z"
+      }
+    ],
+    "total": 1,
+    "limit": 10,
+    "offset": 0
+  }
+}
+```

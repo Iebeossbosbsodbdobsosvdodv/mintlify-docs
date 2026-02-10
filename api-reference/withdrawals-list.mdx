@@ -13,21 +13,13 @@ Liste todos os saques da sua conta.
 GET https://api.zynxwallet.com.br/v1/withdrawals
 ```
 
-## Autenticação
-
-Requer API Key no header:
-
-```
-X-API-Key: sua_api_key_aqui
-```
-
 ## Parâmetros
 
-| Parâmetro | Tipo | Obrigatório | Descrição |
-|-----------|------|-------------|-----------|
-| `limit` | number | Não | Número de resultados (padrão: 10) |
-| `offset` | number | Não | Deslocamento para paginação |
-| `status` | string | Não | Filtrar por status |
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `limit` | number | Número de resultados (padrão: 10) |
+| `offset` | number | Deslocamento para paginação |
+| `status` | string | Filtrar por status |
 
 ## Exemplo de Requisição
 
@@ -48,8 +40,6 @@ console.log(data);
 
 ## Resposta
 
-### Sucesso (200)
-
 ```json
 {
   "success": true,
@@ -68,22 +58,3 @@ console.log(data);
   }
 }
 ```
-
-## Próximos Passos
-
-<CardGroup cols={2}>
-  <Card
-    title="Buscar Saque"
-    icon="search"
-    href="/api-reference/withdrawals/retrieve"
-  >
-    Obtenha detalhes de um saque
-  </Card>
-  <Card
-    title="Criar Saque"
-    icon="plus"
-    href="/api-reference/withdrawals/create"
-  >
-    Crie um novo saque
-  </Card>
-</CardGroup>

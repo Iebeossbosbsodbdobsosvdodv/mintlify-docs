@@ -1,6 +1,4 @@
 node_modules/
-npm-debug.log
-yarn-error.log
 .mintlify/
 .mintlify-cache/
 dist/
@@ -14,8 +12,5 @@ build/
 .DS_Store
 .env
 .env.local
-.env.*.local
-Thumbs.db
-*.tmp
-*.temp
-*.bak
+npm-debug.log
+yarn-error.log
