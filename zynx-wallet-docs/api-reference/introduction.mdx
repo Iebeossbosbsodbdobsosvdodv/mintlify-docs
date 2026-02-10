@@ -1,0 +1,182 @@
+---
+title: Introdução à API
+description: Visão geral da API RESTful do Zynx Wallet
+---
+
+# Introdução à API
+
+A API Zynx Wallet é uma API RESTful moderna que permite integrar pagamentos PIX, gerenciar carteiras digitais e automatizar suas operações financeiras.
+
+## Características Principais
+
+- **RESTful**: Interface padrão e intuitiva
+- **JSON**: Requisições e respostas em JSON
+- **Autenticação**: Suporte a API Keys e JWT Tokens
+- **Rate Limiting**: Limites generosos para escalabilidade
+- **Webhooks**: Notificações em tempo real
+- **Documentação**: Exemplos em múltiplas linguagens
+
+## Base URL
+
+```
+https://api.zynxwallet.com.br/v1
+```
+
+## Versões
+
+A API utiliza versionamento de URL. A versão atual é `v1`.
+
+## Autenticação
+
+Todas as requisições devem incluir autenticação. Veja [Autenticação](/getting-started/authentication) para detalhes.
+
+## Formato de Resposta
+
+Todas as respostas seguem este formato:
+
+### Sucesso (2xx)
+
+```json
+{
+  "success": true,
+  "data": {
+    // Dados da resposta
+  }
+}
+```
+
+### Erro (4xx, 5xx)
+
+```json
+{
+  "success": false,
+  "error": "error_code",
+  "message": "Descrição do erro"
+}
+```
+
+## Endpoints Disponíveis
+
+### Pagamentos
+
+Crie, consulte e gerencie pagamentos PIX.
+
+- [Criar Pagamento](/api-reference/payments/create)
+- [Obter Pagamento](/api-reference/payments/get)
+- [Listar Pagamentos](/api-reference/payments/list)
+- [Cancelar Pagamento](/api-reference/payments/cancel)
+
+### Saques
+
+Gerencie saques e transferências de fundos.
+
+- [Criar Saque](/api-reference/withdrawals/create)
+- [Obter Saque](/api-reference/withdrawals/get)
+- [Listar Saques](/api-reference/withdrawals/list)
+
+### Transferências
+
+Transfira fundos entre contas.
+
+- [Criar Transferência](/api-reference/transfers/create)
+- [Listar Transferências](/api-reference/transfers/list)
+
+### Conta
+
+Gerencie sua conta e saldo.
+
+- [Obter Saldo](/api-reference/account/balance)
+- [Obter Informações](/api-reference/account/info)
+
+## Exemplos de Código
+
+### JavaScript
+
+```javascript
+const apiKey = 'sua_api_key_aqui';
+const baseUrl = 'https://api.zynxwallet.com.br/v1';
+
+async function createPayment(amount, description) {
+  const response = await fetch(`${baseUrl}/payments/create`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      amount,
+      description
+    })
+  });
+  
+  return await response.json();
+}
+```
+
+### Python
+
+```python
+import requests
+
+api_key = 'sua_api_key_aqui'
+base_url = 'https://api.zynxwallet.com.br/v1'
+
+def create_payment(amount, description):
+    response = requests.post(
+        f'{base_url}/payments/create',
+        headers={
+            'X-API-Key': api_key,
+            'Content-Type': 'application/json'
+        },
+        json={
+            'amount': amount,
+            'description': description
+        }
+    )
+    return response.json()
+```
+
+### cURL
+
+```bash
+curl -X POST https://api.zynxwallet.com.br/v1/payments/create \
+  -H "X-API-Key: sua_api_key_aqui" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100.00,
+    "description": "Pagamento de teste"
+  }'
+```
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Autenticação"
+    icon="lock"
+    href="/getting-started/authentication"
+  >
+    Configure sua autenticação
+  </Card>
+  <Card
+    title="Criar Pagamento"
+    icon="credit-card"
+    href="/api-reference/payments/create"
+  >
+    Crie seu primeiro pagamento
+  </Card>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/webhooks/overview"
+  >
+    Configure webhooks
+  </Card>
+  <Card
+    title="Tratamento de Erros"
+    icon="triangle-exclamation"
+    href="/getting-started/errors"
+  >
+    Como lidar com erros
+  </Card>
+</CardGroup>

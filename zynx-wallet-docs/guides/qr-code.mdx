@@ -1,0 +1,264 @@
+---
+title: Trabalhando com QR Codes
+description: Guia para exibir e gerenciar QR Codes PIX
+---
+
+# Trabalhando com QR Codes
+
+Aprenda como trabalhar com QR Codes PIX na sua aplicação.
+
+## Obter QR Code
+
+Quando você cria um pagamento, recebe o QR Code em dois formatos:
+
+```json
+{
+  "id": "pay_abc123",
+  "qr_code": "00020126580014br.gov.bcb.pix...",
+  "qr_code_url": "https://api.zynxwallet.com.br/qr/pay_abc123.png"
+}
+```
+
+- **qr_code**: String PIX bruta (pode ser copiada e colada)
+- **qr_code_url**: URL da imagem PNG do QR Code
+
+## Exibir QR Code
+
+### Opção 1: Usar URL da Imagem
+
+A forma mais simples é usar a URL fornecida:
+
+```html
+<img src="https://api.zynxwallet.com.br/qr/pay_abc123.png" alt="QR Code PIX" />
+```
+
+### Opção 2: Gerar Localmente
+
+Você pode gerar o QR Code localmente usando bibliotecas:
+
+#### JavaScript (qrcode.js)
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<div id="qrcode"></div>
+
+<script>
+  const qrCode = "00020126580014br.gov.bcb.pix...";
+  new QRCode(document.getElementById("qrcode"), qrCode);
+</script>
+```
+
+#### React (qrcode.react)
+
+```bash
+npm install qrcode.react
+```
+
+```jsx
+import QRCode from 'qrcode.react';
+
+export function PixQRCode({ qrCodeString }) {
+  return (
+    <QRCode 
+      value={qrCodeString}
+      size={256}
+      level="H"
+      includeMargin={true}
+    />
+  );
+}
+```
+
+#### Python (qrcode)
+
+```bash
+pip install qrcode[pil]
+```
+
+```python
+import qrcode
+
+def generate_qr_code(pix_string, filename):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(pix_string)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(filename)
+
+# Usar
+generate_qr_code("00020126580014br.gov.bcb.pix...", "qrcode.png")
+```
+
+## Copiar e Colar PIX
+
+Além do QR Code, você pode permitir que o cliente copie o código PIX:
+
+```jsx
+export function PixCopyPaste({ qrCodeString }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(qrCodeString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div>
+      <input 
+        type="text" 
+        value={qrCodeString} 
+        readOnly 
+        onClick={e => e.target.select()}
+      />
+      <button onClick={handleCopy}>
+        {copied ? 'Copiado!' : 'Copiar PIX'}
+      </button>
+    </div>
+  );
+}
+```
+
+## Responsividade
+
+Certifique-se de que o QR Code é responsivo:
+
+```css
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.qr-code-container img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .qr-code-container img {
+    max-width: 250px;
+  }
+}
+```
+
+## Acessibilidade
+
+Sempre forneça alternativas para usuários que não conseguem escanear:
+
+```jsx
+export function PixPaymentOptions({ payment }) {
+  const [showCopyPaste, setShowCopyPaste] = useState(false);
+
+  return (
+    <div className="pix-payment">
+      <h3>Escaneie o QR Code</h3>
+      <img 
+        src={payment.qr_code_url} 
+        alt="QR Code PIX para pagamento de R$ 150,50"
+      />
+      
+      <button onClick={() => setShowCopyPaste(!showCopyPaste)}>
+        Não consegue escanear? Copie e cole o PIX
+      </button>
+      
+      {showCopyPaste && (
+        <div>
+          <input 
+            type="text" 
+            value={payment.qr_code}
+            readOnly
+          />
+          <button onClick={() => navigator.clipboard.writeText(payment.qr_code)}>
+            Copiar
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## Validação de QR Code
+
+Você pode validar o QR Code antes de exibir:
+
+```javascript
+function validateQRCode(qrString) {
+  // QR Code PIX começa com "00020126"
+  if (!qrString.startsWith('00020126')) {
+    return false;
+  }
+  
+  // Validar comprimento (mínimo 26 caracteres)
+  if (qrString.length < 26) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Usar
+const payment = await createPayment(150.50, 'Compra');
+if (validateQRCode(payment.qr_code)) {
+  displayQRCode(payment);
+} else {
+  console.error('QR Code inválido');
+}
+```
+
+## Tratamento de Erros
+
+```javascript
+async function displayPixPayment(paymentId) {
+  try {
+    const payment = await getPayment(paymentId);
+    
+    if (!payment.qr_code || !payment.qr_code_url) {
+      throw new Error('QR Code não disponível');
+    }
+    
+    // Validar QR Code
+    if (!validateQRCode(payment.qr_code)) {
+      throw new Error('QR Code inválido');
+    }
+    
+    // Exibir QR Code
+    displayQRCode(payment);
+  } catch (error) {
+    console.error('Erro ao exibir QR Code:', error);
+    showErrorMessage('Não foi possível gerar o QR Code. Tente novamente.');
+  }
+}
+```
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Integração PIX"
+    icon="credit-card"
+    href="/guides/pix-integration"
+  >
+    Guia completo de integração
+  </Card>
+  <Card
+    title="Criar Pagamento"
+    icon="plus"
+    href="/api-reference/payments/create"
+  >
+    Referência da API
+  </Card>
+</CardGroup>

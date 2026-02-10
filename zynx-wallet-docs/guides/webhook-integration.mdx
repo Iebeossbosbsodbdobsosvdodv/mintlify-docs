@@ -1,0 +1,390 @@
+---
+title: Integração de Webhooks
+description: Guia passo a passo para integrar webhooks
+---
+
+# Integração de Webhooks
+
+Aprenda como integrar webhooks em sua aplicação para receber notificações em tempo real.
+
+## Por que Usar Webhooks?
+
+Webhooks são mais eficientes que polling:
+
+| Aspecto | Polling | Webhooks |
+|--------|---------|----------|
+| Latência | Até N minutos | Instantâneo |
+| Carga de Servidor | Alta | Baixa |
+| Custo | Alto | Baixo |
+| Complexidade | Simples | Média |
+
+## Passo 1: Criar Endpoint
+
+Crie um endpoint HTTP POST que receberá os webhooks:
+
+### Express.js
+
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+  
+  console.log('Webhook recebido:', event.type);
+  console.log('Dados:', event.data);
+  
+  // Responder rapidamente
+  res.json({ success: true });
+  
+  // Processar de forma assíncrona
+  processEvent(event).catch(err => {
+    console.error('Erro ao processar evento:', err);
+  });
+});
+
+async function processEvent(event) {
+  // Processar evento aqui
+  console.log('Processando:', event.type);
+}
+
+app.listen(3000, () => {
+  console.log('Servidor rodando em http://localhost:3000');
+});
+```
+
+### Flask (Python)
+
+```python
+from flask import Flask, request, jsonify
+import threading
+
+app = Flask(__name__)
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    event = request.json
+    
+    print(f'Webhook recebido: {event["type"]}')
+    print(f'Dados: {event["data"]}')
+    
+    # Responder rapidamente
+    response = jsonify({'success': True})
+    
+    # Processar de forma assíncrona
+    thread = threading.Thread(target=process_event, args=(event,))
+    thread.daemon = True
+    thread.start()
+    
+    return response
+
+def process_event(event):
+    print(f'Processando: {event["type"]}')
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
+```
+
+## Passo 2: Validar Assinatura
+
+Sempre valide a assinatura HMAC:
+
+### JavaScript
+
+```javascript
+const crypto = require('crypto');
+
+function validateWebhookSignature(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return hash === signature;
+}
+
+app.post('/webhook', (req, res) => {
+  const event = req.body;
+  const signature = req.headers['x-zynx-signature'];
+  const secret = process.env.ZYNX_WEBHOOK_SECRET;
+  
+  // Validar assinatura
+  if (!validateWebhookSignature(event, signature, secret)) {
+    console.error('Assinatura inválida!');
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  console.log('Assinatura validada ✓');
+  res.json({ success: true });
+});
+```
+
+### Python
+
+```python
+import hmac
+import hashlib
+import json
+
+def validate_webhook_signature(payload, signature, secret):
+    hash_obj = hmac.new(
+        secret.encode(),
+        json.dumps(payload).encode(),
+        hashlib.sha256
+    )
+    expected_signature = hash_obj.hexdigest()
+    return hmac.compare_digest(expected_signature, signature)
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    event = request.json
+    signature = request.headers.get('X-Zynx-Signature')
+    secret = os.getenv('ZYNX_WEBHOOK_SECRET')
+    
+    # Validar assinatura
+    if not validate_webhook_signature(event, signature, secret):
+        print('Assinatura inválida!')
+        return jsonify({'error': 'Invalid signature'}), 401
+    
+    print('Assinatura validada ✓')
+    return jsonify({'success': True})
+```
+
+## Passo 3: Processar Eventos
+
+Implemente a lógica para processar cada tipo de evento:
+
+### Pagamento Completado
+
+```javascript
+async function processEvent(event) {
+  if (event.type === 'payment.completed') {
+    const payment = event.data;
+    
+    console.log(`Pagamento ${payment.id} confirmado!`);
+    console.log(`Valor: R$ ${payment.amount}`);
+    
+    // Atualizar banco de dados
+    await db.payments.update(payment.id, {
+      status: 'completed',
+      paid_at: new Date(payment.paid_at)
+    });
+    
+    // Enviar email de confirmação
+    await sendEmail(payment.customer_email, {
+      subject: 'Pagamento Confirmado',
+      body: `Seu pagamento de R$ ${payment.amount} foi confirmado!`
+    });
+    
+    // Processar pedido
+    await fulfillOrder(payment.id);
+  }
+}
+```
+
+### Saque Completado
+
+```javascript
+async function processEvent(event) {
+  if (event.type === 'withdrawal.completed') {
+    const withdrawal = event.data;
+    
+    console.log(`Saque ${withdrawal.id} processado!`);
+    console.log(`Valor: R$ ${withdrawal.amount}`);
+    
+    // Atualizar banco de dados
+    await db.withdrawals.update(withdrawal.id, {
+      status: 'completed',
+      completed_at: new Date(withdrawal.completed_at)
+    });
+    
+    // Notificar usuário
+    await notifyUser(withdrawal.user_id, {
+      title: 'Saque Processado',
+      message: `Seu saque de R$ ${withdrawal.amount} foi processado!`
+    });
+  }
+}
+```
+
+## Passo 4: Implementar Idempotência
+
+Evite processar o mesmo evento duas vezes:
+
+```javascript
+const processedEvents = new Set();
+
+async function processEvent(event) {
+  // Verificar se já foi processado
+  if (processedEvents.has(event.id)) {
+    console.log(`Evento ${event.id} já foi processado`);
+    return;
+  }
+  
+  try {
+    // Processar evento
+    if (event.type === 'payment.completed') {
+      await handlePaymentCompleted(event.data);
+    }
+    
+    // Marcar como processado
+    processedEvents.add(event.id);
+    
+    // Salvar no banco de dados
+    await db.processedEvents.insert({
+      event_id: event.id,
+      processed_at: new Date()
+    });
+  } catch (error) {
+    console.error('Erro ao processar evento:', error);
+    // Não marcar como processado para retry automático
+  }
+}
+```
+
+## Passo 5: Registrar Webhook na Dashboard
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "Webhooks"
+3. Clique em "Adicionar Webhook"
+4. Insira a URL: `https://seu-dominio.com/webhook`
+5. Selecione os eventos que deseja receber
+6. Salve
+
+## Expor Servidor Local
+
+Para testar em desenvolvimento, use ngrok:
+
+```bash
+# Instalar ngrok
+npm install -g ngrok
+
+# Expor porta 3000
+ngrok http 3000
+
+# Você receberá uma URL como:
+# https://abc123.ngrok.io
+
+# Configure como webhook:
+# https://abc123.ngrok.io/webhook
+```
+
+## Exemplo Completo
+
+### Servidor Express Completo
+
+```javascript
+const express = require('express');
+const crypto = require('crypto');
+const app = express();
+
+app.use(express.json());
+
+// Armazenar eventos processados
+const processedEvents = new Set();
+
+// Validar assinatura
+function validateSignature(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  return hash === signature;
+}
+
+// Endpoint de webhook
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  const signature = req.headers['x-zynx-signature'];
+  const secret = process.env.ZYNX_WEBHOOK_SECRET;
+  
+  // 1. Validar assinatura
+  if (!validateSignature(event, signature, secret)) {
+    console.error('Assinatura inválida!');
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // 2. Responder rapidamente
+  res.json({ success: true });
+  
+  // 3. Processar de forma assíncrona
+  processEvent(event).catch(err => {
+    console.error('Erro ao processar evento:', err);
+  });
+});
+
+// Processar evento
+async function processEvent(event) {
+  // Verificar se já foi processado
+  if (processedEvents.has(event.id)) {
+    console.log(`Evento ${event.id} já foi processado`);
+    return;
+  }
+  
+  try {
+    console.log(`Processando evento: ${event.type}`);
+    
+    switch (event.type) {
+      case 'payment.completed':
+        await handlePaymentCompleted(event.data);
+        break;
+      case 'withdrawal.completed':
+        await handleWithdrawalCompleted(event.data);
+        break;
+      case 'transfer.completed':
+        await handleTransferCompleted(event.data);
+        break;
+      default:
+        console.log(`Evento desconhecido: ${event.type}`);
+    }
+    
+    // Marcar como processado
+    processedEvents.add(event.id);
+    console.log(`Evento ${event.id} processado com sucesso`);
+  } catch (error) {
+    console.error('Erro ao processar evento:', error);
+  }
+}
+
+async function handlePaymentCompleted(payment) {
+  console.log(`Pagamento ${payment.id} confirmado!`);
+  // Sua lógica aqui
+}
+
+async function handleWithdrawalCompleted(withdrawal) {
+  console.log(`Saque ${withdrawal.id} processado!`);
+  // Sua lógica aqui
+}
+
+async function handleTransferCompleted(transfer) {
+  console.log(`Transferência ${transfer.id} concluída!`);
+  // Sua lógica aqui
+}
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
+```
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/webhooks/overview"
+  >
+    Visão geral de webhooks
+  </Card>
+  <Card
+    title="Eventos"
+    icon="list"
+    href="/webhooks/events"
+  >
+    Lista de eventos disponíveis
+  </Card>
+</CardGroup>

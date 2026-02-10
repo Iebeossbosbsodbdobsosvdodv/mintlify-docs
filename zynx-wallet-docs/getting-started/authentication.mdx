@@ -1,0 +1,202 @@
+---
+title: Autenticação
+description: Configure sua autenticação com API Keys e JWT Tokens
+---
+
+# Autenticação
+
+A API Zynx Wallet utiliza autenticação baseada em **API Keys** e **JWT Tokens**.
+
+## Opção 1: API Key
+
+Use API Keys para requisições simples e testes.
+
+### Incluir no Header
+
+```bash
+X-API-Key: sua_api_key_aqui
+```
+
+### Exemplo com cURL
+
+```bash
+curl -H "X-API-Key: sua_api_key_aqui" \
+  https://api.zynxwallet.com.br/v1/wallet/balance
+```
+
+### Exemplo com JavaScript
+
+```javascript
+const response = await fetch('https://api.zynxwallet.com.br/v1/wallet/balance', {
+  headers: {
+    'X-API-Key': 'sua_api_key_aqui'
+  }
+});
+```
+
+## Opção 2: Bearer Token (JWT)
+
+Use JWT Tokens após fazer login. Mais seguro para produção.
+
+### Incluir no Header
+
+```bash
+Authorization: Bearer seu_jwt_token_aqui
+```
+
+### Fazer Login
+
+```bash
+curl -X POST https://api.zynxwallet.com.br/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "seu_email@example.com",
+    "password": "sua_senha"
+  }'
+```
+
+### Resposta
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expires_in": 86400,
+    "user": {
+      "id": "user_123456",
+      "email": "seu_email@example.com"
+    }
+  }
+}
+```
+
+### Usar o Token
+
+```bash
+curl -H "Authorization: Bearer seu_jwt_token_aqui" \
+  https://api.zynxwallet.com.br/v1/wallet/balance
+```
+
+## Boas Práticas de Segurança
+
+<Warning>
+  **Nunca compartilhe sua API Key ou Token!**
+  - Guarde em variáveis de ambiente
+  - Use `.env` ou secrets manager
+  - Rotacione regularmente
+  - Revogue chaves comprometidas imediatamente
+</Warning>
+
+### Variáveis de Ambiente
+
+```bash
+# .env
+ZYNX_API_KEY=sua_api_key_aqui
+ZYNX_API_URL=https://api.zynxwallet.com.br
+```
+
+### Usar em Código
+
+```javascript
+const apiKey = process.env.ZYNX_API_KEY;
+const apiUrl = process.env.ZYNX_API_URL;
+
+const response = await fetch(`${apiUrl}/v1/wallet/balance`, {
+  headers: {
+    'X-API-Key': apiKey
+  }
+});
+```
+
+## Gerenciar API Keys
+
+### Gerar Nova Chave
+
+1. Acesse [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "API Keys"
+3. Clique em "Gerar Nova Chave"
+4. Dê um nome descritivo
+5. Copie a chave (será exibida apenas uma vez!)
+
+### Revogar Chave
+
+1. Acesse [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "API Keys"
+3. Clique em "Revogar" na chave desejada
+4. Confirme a ação
+
+### Rotacionar Chaves
+
+Recomendamos rotacionar suas chaves a cada 90 dias:
+
+1. Gere uma nova chave
+2. Atualize seu código/aplicação
+3. Teste completamente
+4. Revogue a chave antiga
+
+## Expiração de Tokens
+
+- **API Keys**: Não expiram (até serem revogadas)
+- **JWT Tokens**: Expiram em 24 horas por padrão
+- **Refresh Token**: Use para obter um novo JWT sem fazer login novamente
+
+### Renovar Token
+
+```bash
+curl -X POST https://api.zynxwallet.com.br/v1/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "seu_refresh_token_aqui"
+  }'
+```
+
+## Tratamento de Erros de Autenticação
+
+### 401 - Não Autorizado
+
+```json
+{
+  "success": false,
+  "error": "unauthorized",
+  "message": "API Key ou Token inválido"
+}
+```
+
+**Solução:**
+- Verifique se a chave está correta
+- Verifique se o token não expirou
+- Gere uma nova chave se necessário
+
+### 403 - Acesso Negado
+
+```json
+{
+  "success": false,
+  "error": "forbidden",
+  "message": "Você não tem permissão para acessar este recurso"
+}
+```
+
+**Solução:**
+- Verifique suas permissões
+- Contate o suporte se necessário
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Rate Limiting"
+    icon="gauge"
+    href="/getting-started/rate-limiting"
+  >
+    Entenda os limites da API
+  </Card>
+  <Card
+    title="Criar Pagamento"
+    icon="credit-card"
+    href="/api-reference/payments/create"
+  >
+    Crie seu primeiro pagamento
+  </Card>
+</CardGroup>

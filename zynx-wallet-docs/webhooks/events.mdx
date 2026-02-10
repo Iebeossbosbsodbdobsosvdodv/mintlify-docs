@@ -1,0 +1,270 @@
+---
+title: Eventos de Webhook
+description: Referência completa de todos os eventos de webhook
+---
+
+# Eventos de Webhook
+
+Referência completa de todos os eventos que podem ser enviados via webhook.
+
+## Pagamentos
+
+### payment.created
+
+Enviado quando um novo pagamento é criado.
+
+```json
+{
+  "id": "evt_abc123",
+  "type": "payment.created",
+  "timestamp": "2024-02-10T12:30:00Z",
+  "data": {
+    "id": "pay_abc123def456",
+    "amount": 150.50,
+    "currency": "BRL",
+    "description": "Compra de produto",
+    "status": "pending",
+    "customer_email": "cliente@example.com",
+    "created_at": "2024-02-10T12:30:00Z"
+  }
+}
+```
+
+### payment.completed
+
+Enviado quando um pagamento é confirmado.
+
+```json
+{
+  "id": "evt_abc124",
+  "type": "payment.completed",
+  "timestamp": "2024-02-10T12:35:00Z",
+  "data": {
+    "id": "pay_abc123def456",
+    "amount": 150.50,
+    "currency": "BRL",
+    "description": "Compra de produto",
+    "status": "completed",
+    "customer_email": "cliente@example.com",
+    "payer_name": "João Silva",
+    "payer_bank": "Banco do Brasil",
+    "paid_at": "2024-02-10T12:35:00Z"
+  }
+}
+```
+
+### payment.cancelled
+
+Enviado quando um pagamento é cancelado.
+
+```json
+{
+  "id": "evt_abc125",
+  "type": "payment.cancelled",
+  "timestamp": "2024-02-10T12:40:00Z",
+  "data": {
+    "id": "pay_abc123def456",
+    "amount": 150.50,
+    "currency": "BRL",
+    "status": "cancelled",
+    "cancellation_reason": "Cliente solicitou cancelamento",
+    "cancelled_at": "2024-02-10T12:40:00Z"
+  }
+}
+```
+
+### payment.expired
+
+Enviado quando um pagamento expira.
+
+```json
+{
+  "id": "evt_abc126",
+  "type": "payment.expired",
+  "timestamp": "2024-02-10T13:30:00Z",
+  "data": {
+    "id": "pay_abc123def456",
+    "amount": 150.50,
+    "currency": "BRL",
+    "status": "expired",
+    "expired_at": "2024-02-10T13:30:00Z"
+  }
+}
+```
+
+## Saques
+
+### withdrawal.created
+
+Enviado quando um novo saque é criado.
+
+```json
+{
+  "id": "evt_abc127",
+  "type": "withdrawal.created",
+  "timestamp": "2024-02-10T12:30:00Z",
+  "data": {
+    "id": "wd_abc123def456",
+    "amount": 500.00,
+    "currency": "BRL",
+    "status": "pending",
+    "bank_account": {
+      "holder_name": "João Silva",
+      "bank": "Banco do Brasil"
+    },
+    "created_at": "2024-02-10T12:30:00Z"
+  }
+}
+```
+
+### withdrawal.processing
+
+Enviado quando um saque começa a ser processado.
+
+```json
+{
+  "id": "evt_abc128",
+  "type": "withdrawal.processing",
+  "timestamp": "2024-02-10T12:35:00Z",
+  "data": {
+    "id": "wd_abc123def456",
+    "amount": 500.00,
+    "currency": "BRL",
+    "status": "processing",
+    "estimated_arrival": "2024-02-12T00:00:00Z"
+  }
+}
+```
+
+### withdrawal.completed
+
+Enviado quando um saque é transferido.
+
+```json
+{
+  "id": "evt_abc129",
+  "type": "withdrawal.completed",
+  "timestamp": "2024-02-12T14:30:00Z",
+  "data": {
+    "id": "wd_abc123def456",
+    "amount": 500.00,
+    "currency": "BRL",
+    "status": "completed",
+    "completed_at": "2024-02-12T14:30:00Z"
+  }
+}
+```
+
+### withdrawal.failed
+
+Enviado quando um saque falha.
+
+```json
+{
+  "id": "evt_abc130",
+  "type": "withdrawal.failed",
+  "timestamp": "2024-02-12T14:30:00Z",
+  "data": {
+    "id": "wd_abc123def456",
+    "amount": 500.00,
+    "currency": "BRL",
+    "status": "failed",
+    "failure_reason": "Dados bancários inválidos",
+    "failed_at": "2024-02-12T14:30:00Z"
+  }
+}
+```
+
+## Transferências
+
+### transfer.created
+
+Enviado quando uma transferência é criada.
+
+```json
+{
+  "id": "evt_abc131",
+  "type": "transfer.created",
+  "timestamp": "2024-02-10T12:30:00Z",
+  "data": {
+    "id": "tr_abc123def456",
+    "amount": 250.00,
+    "currency": "BRL",
+    "status": "pending",
+    "sender_email": "seu_email@example.com",
+    "recipient_email": "destinatario@example.com",
+    "created_at": "2024-02-10T12:30:00Z"
+  }
+}
+```
+
+### transfer.completed
+
+Enviado quando uma transferência é concluída.
+
+```json
+{
+  "id": "evt_abc132",
+  "type": "transfer.completed",
+  "timestamp": "2024-02-10T12:30:01Z",
+  "data": {
+    "id": "tr_abc123def456",
+    "amount": 250.00,
+    "currency": "BRL",
+    "status": "completed",
+    "sender_email": "seu_email@example.com",
+    "recipient_email": "destinatario@example.com",
+    "completed_at": "2024-02-10T12:30:01Z"
+  }
+}
+```
+
+## Tratamento de Eventos
+
+### Exemplo: Processar Pagamento Completado
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  
+  if (event.type === 'payment.completed') {
+    const payment = event.data;
+    
+    // Atualizar banco de dados
+    await db.payments.update(payment.id, {
+      status: 'completed',
+      paid_at: payment.paid_at
+    });
+    
+    // Enviar email de confirmação
+    await sendEmail(payment.customer_email, {
+      subject: 'Pagamento Confirmado',
+      body: `Seu pagamento de R$ ${payment.amount} foi confirmado!`
+    });
+    
+    // Processar pedido
+    await processOrder(payment.id);
+  }
+  
+  res.json({ success: true });
+});
+```
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Webhooks"
+    icon="webhook"
+    href="/webhooks/overview"
+  >
+    Voltar para visão geral
+  </Card>
+  <Card
+    title="Testando Webhooks"
+    icon="flask"
+    href="/webhooks/testing"
+  >
+    Teste seus webhooks
+  </Card>
+</CardGroup>

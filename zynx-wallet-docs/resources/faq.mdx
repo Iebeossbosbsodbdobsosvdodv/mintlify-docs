@@ -1,0 +1,183 @@
+---
+title: Perguntas Frequentes
+description: Respostas para as perguntas mais comuns
+---
+
+# Perguntas Frequentes
+
+## Geral
+
+### O que é Zynx Wallet?
+
+Zynx Wallet é uma plataforma de pagamentos digitais que oferece anonimato, privacidade e sem KYC. Você pode aceitar pagamentos PIX, gerenciar sua carteira e automatizar suas operações financeiras.
+
+### Como funciona a Zynx Wallet?
+
+A Zynx Wallet funciona como um intermediário entre você e seus clientes. Você cria um pagamento, o cliente escaneia o QR Code PIX e paga, e você recebe o dinheiro na sua conta.
+
+### Preciso de KYC para usar?
+
+Não! A Zynx Wallet foi projetada para oferecer privacidade total sem necessidade de KYC (Know Your Customer).
+
+### Qual é a taxa de transação?
+
+As taxas variam de acordo com seu plano. Confira a [Dashboard](https://dashboard.zynxwallet.com.br) para ver as taxas atuais do seu plano.
+
+## Pagamentos
+
+### Quanto tempo leva para receber um pagamento?
+
+Os pagamentos PIX são instantâneos. Assim que o cliente confirma o pagamento, você recebe a notificação via webhook.
+
+### Qual é o valor mínimo e máximo de pagamento?
+
+- **Mínimo**: R$ 1.00
+- **Máximo**: R$ 100.000.00 por transação
+
+### Posso cancelar um pagamento?
+
+Você pode cancelar um pagamento que ainda não foi pago (status `pending`). Após a confirmação, não é possível cancelar.
+
+### O que fazer se um cliente não conseguir escanear o QR Code?
+
+Você pode fornecer a opção de copiar e colar o código PIX. O cliente pode usar qualquer app bancário para fazer o pagamento.
+
+### Há limite de pagamentos por dia?
+
+Não há limite de quantidade de pagamentos, mas há limites de valor. Confira sua [Dashboard](https://dashboard.zynxwallet.com.br) para detalhes.
+
+## Saques
+
+### Como faço um saque?
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Saques"
+3. Clique em "Novo Saque"
+4. Insira o valor e selecione sua conta bancária
+5. Confirme
+
+### Qual é o tempo de processamento?
+
+Os saques geralmente são processados em 1-2 dias úteis. Você receberá um webhook quando o saque for concluído.
+
+### Qual é o valor mínimo e máximo de saque?
+
+- **Mínimo**: R$ 10.00
+- **Máximo**: R$ 50.000.00 por transação
+- **Limite diário**: R$ 100.000.00
+
+### Posso sacar para qualquer banco?
+
+Sim, você pode sacar para qualquer banco brasileiro. Basta configurar sua conta bancária na [Dashboard](https://dashboard.zynxwallet.com.br).
+
+### Há taxa para saques?
+
+Sim, há uma taxa de saque. Confira a [Dashboard](https://dashboard.zynxwallet.com.br) para ver a taxa atual.
+
+## API
+
+### Como obtenho minha API Key?
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "API Keys"
+3. Clique em "Gerar Nova Chave"
+4. Copie e guarde em local seguro
+
+### Posso usar a mesma API Key em múltiplos servidores?
+
+Sim, você pode usar a mesma API Key em múltiplos servidores. Recomendamos usar variáveis de ambiente para manter segura.
+
+### Como faço para revogar uma API Key?
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "API Keys"
+3. Clique em "Revogar" na chave desejada
+4. Confirme
+
+### Qual é o rate limit da API?
+
+O rate limit varia de acordo com o tipo de requisição. Veja [Rate Limiting](/getting-started/rate-limiting) para detalhes.
+
+### Como faço para aumentar meu rate limit?
+
+Entre em contato conosco via [suporte@zynxwallet.com.br](mailto:suporte@zynxwallet.com.br) ou [Telegram](https://t.me/zynxwallet_support).
+
+## Webhooks
+
+### Como configuro webhooks?
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Vá para "Configurações" > "Webhooks"
+3. Clique em "Adicionar Webhook"
+4. Insira a URL do seu endpoint
+5. Selecione os eventos
+6. Salve
+
+### Como valido a assinatura do webhook?
+
+Use HMAC-SHA256 para validar a assinatura. Veja [Webhooks](/webhooks/overview) para exemplo de código.
+
+### Quantas vezes o webhook é reenviado se falhar?
+
+O webhook é reenviado até 5 vezes com intervalos crescentes: 5 minutos, 30 minutos, 2 horas, 24 horas.
+
+### Posso testar webhooks em desenvolvimento?
+
+Sim! Use ferramentas como [Webhook.site](https://webhook.site) ou [ngrok](https://ngrok.com). Veja [Testando Webhooks](/webhooks/testing).
+
+## Segurança
+
+### Minha API Key foi comprometida. O que faço?
+
+1. Acesse a [Dashboard](https://dashboard.zynxwallet.com.br)
+2. Revogue a chave comprometida imediatamente
+3. Gere uma nova chave
+4. Atualize sua aplicação
+
+### Como protejo minha API Key?
+
+- Use variáveis de ambiente
+- Nunca commite a chave no Git
+- Rotacione regularmente
+- Use diferentes chaves para diferentes ambientes
+
+### Vocês armazenam dados de cartão de crédito?
+
+Não, a Zynx Wallet não armazena dados de cartão de crédito. Usamos apenas PIX para pagamentos.
+
+### Como são protegidos meus dados?
+
+Seus dados são protegidos com criptografia de ponta a ponta e armazenados em servidores seguros.
+
+## Problemas Comuns
+
+### Estou recebendo erro 401
+
+Verifique se sua API Key está correta e não expirou. Gere uma nova chave se necessário.
+
+### Estou recebendo erro 429
+
+Você excedeu o rate limit. Aguarde antes de fazer novas requisições. Veja [Rate Limiting](/getting-started/rate-limiting).
+
+### Meu webhook não está sendo recebido
+
+1. Verifique se a URL está correta
+2. Verifique se seu servidor está respondendo com status 200
+3. Verifique os logs de erro
+4. Use [Webhook.site](https://webhook.site) para testar
+
+### Não consigo criar um pagamento
+
+1. Verifique se sua API Key está correta
+2. Verifique se você tem saldo suficiente
+3. Verifique se os parâmetros estão corretos
+4. Veja [Tratamento de Erros](/getting-started/errors)
+
+## Contato
+
+Não encontrou a resposta? Entre em contato conosco:
+
+- **Email**: [suporte@zynxwallet.com.br](mailto:suporte@zynxwallet.com.br)
+- **Telegram**: [@zynxwallet_support](https://t.me/zynxwallet_support)
+- **Discord**: [Servidor Discord](https://discord.gg/zynxwallet)
+- **WhatsApp**: [Suporte WhatsApp](https://wa.me/5511999999999)

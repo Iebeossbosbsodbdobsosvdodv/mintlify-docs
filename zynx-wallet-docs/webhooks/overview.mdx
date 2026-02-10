@@ -1,0 +1,221 @@
+---
+title: Webhooks
+description: Configure webhooks para receber notificações em tempo real
+---
+
+# Webhooks
+
+Webhooks permitem que sua aplicação receba notificações em tempo real sobre eventos importantes, como pagamentos confirmados, saques processados e transferências concluídas.
+
+## O que são Webhooks?
+
+Um webhook é uma forma de sua aplicação receber notificações automáticas quando algo acontece na Zynx Wallet. Em vez de fazer polling (verificar constantemente), você configura um endpoint que receberá as notificações.
+
+## Vantagens
+
+- **Tempo Real**: Receba notificações instantaneamente
+- **Eficiente**: Não precisa fazer polling constante
+- **Confiável**: Retry automático em caso de falha
+- **Seguro**: Assinatura HMAC para validar origem
+
+## Como Funciona
+
+```
+┌─────────────────┐
+│  Zynx Wallet    │
+│   (Servidor)    │
+└────────┬────────┘
+         │ Evento ocorre
+         │ (ex: pagamento confirmado)
+         │
+         ├─ Prepara webhook
+         ├─ Assina com HMAC
+         │
+         ▼
+┌─────────────────┐
+│ Sua Aplicação   │
+│  (Seu Servidor) │
+└─────────────────┘
+```
+
+## Configurar Webhook
+
+### 1. Criar Endpoint
+
+Crie um endpoint HTTP POST que receberá as notificações:
+
+```javascript
+// Express.js
+app.post('/webhook', express.json(), (req, res) => {
+  const event = req.body;
+  
+  // Validar assinatura
+  const signature = req.headers['x-zynx-signature'];
+  if (!validateSignature(event, signature)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // Processar evento
+  console.log('Evento recebido:', event.type);
+  
+  // Responder rapidamente
+  res.json({ success: true });
+});
+```
+
+### 2. Registrar Webhook
+
+Acesse a [Dashboard](https://dashboard.zynxwallet.com.br) e configure seu webhook:
+
+1. Vá para "Configurações" > "Webhooks"
+2. Clique em "Adicionar Webhook"
+3. Insira a URL do seu endpoint
+4. Selecione os eventos que deseja receber
+5. Salve
+
+### 3. Validar Assinatura
+
+Sempre valide a assinatura para garantir que o webhook veio da Zynx Wallet:
+
+```javascript
+const crypto = require('crypto');
+
+function validateSignature(payload, signature) {
+  const secret = process.env.ZYNX_WEBHOOK_SECRET;
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return hash === signature;
+}
+```
+
+## Estrutura do Webhook
+
+Todos os webhooks seguem este formato:
+
+```json
+{
+  "id": "evt_abc123def456",
+  "type": "payment.completed",
+  "timestamp": "2024-02-10T12:30:00Z",
+  "data": {
+    "id": "pay_abc123def456",
+    "amount": 150.50,
+    "status": "completed",
+    "description": "Compra de produto"
+  }
+}
+```
+
+## Eventos Disponíveis
+
+### Pagamentos
+
+- `payment.created` - Pagamento foi criado
+- `payment.completed` - Pagamento foi confirmado
+- `payment.cancelled` - Pagamento foi cancelado
+- `payment.expired` - Pagamento expirou
+
+### Saques
+
+- `withdrawal.created` - Saque foi criado
+- `withdrawal.processing` - Saque está sendo processado
+- `withdrawal.completed` - Saque foi transferido
+- `withdrawal.failed` - Saque falhou
+
+### Transferências
+
+- `transfer.created` - Transferência foi criada
+- `transfer.completed` - Transferência foi concluída
+
+## Boas Práticas
+
+<Tip>
+  **Dicas para implementar webhooks:**
+  - Responda rapidamente (< 5 segundos)
+  - Processe eventos de forma assíncrona
+  - Valide sempre a assinatura
+  - Implemente idempotência (mesmo evento não causa duplicação)
+  - Armazene o ID do evento para evitar duplicatas
+</Tip>
+
+### Responder Rapidamente
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  
+  // Responder imediatamente
+  res.json({ success: true });
+  
+  // Processar de forma assíncrona
+  processEvent(event).catch(err => {
+    console.error('Erro ao processar evento:', err);
+  });
+});
+
+async function processEvent(event) {
+  // Processar evento aqui
+  console.log('Processando:', event.type);
+}
+```
+
+### Implementar Idempotência
+
+```javascript
+const processedEvents = new Set();
+
+app.post('/webhook', async (req, res) => {
+  const event = req.body;
+  
+  // Verificar se já foi processado
+  if (processedEvents.has(event.id)) {
+    return res.json({ success: true });
+  }
+  
+  // Processar evento
+  await processEvent(event);
+  
+  // Marcar como processado
+  processedEvents.add(event.id);
+  
+  res.json({ success: true });
+});
+```
+
+## Retry Automático
+
+Se seu endpoint retornar um erro (status 4xx ou 5xx), a Zynx Wallet tentará novamente:
+
+| Tentativa | Intervalo |
+|-----------|-----------|
+| 1ª | Imediato |
+| 2ª | 5 minutos |
+| 3ª | 30 minutos |
+| 4ª | 2 horas |
+| 5ª | 24 horas |
+
+## Testar Webhooks
+
+Veja [Testando Webhooks](/webhooks/testing) para aprender como testar seus webhooks em desenvolvimento.
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Eventos"
+    icon="list"
+    href="/webhooks/events"
+  >
+    Veja todos os eventos disponíveis
+  </Card>
+  <Card
+    title="Testando Webhooks"
+    icon="flask"
+    href="/webhooks/testing"
+  >
+    Teste seus webhooks
+  </Card>
+</CardGroup>

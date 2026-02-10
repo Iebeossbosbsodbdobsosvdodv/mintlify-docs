@@ -1,0 +1,390 @@
+---
+title: Tratamento de Erros
+description: Como lidar com erros da API de forma robusta
+---
+
+# Tratamento de Erros
+
+Aprenda como tratar erros de forma robusta em sua aplicação.
+
+## Estrutura de Erro
+
+Todos os erros da API seguem este formato:
+
+```json
+{
+  "success": false,
+  "error": "error_code",
+  "message": "Descrição do erro em português"
+}
+```
+
+## Códigos de Erro HTTP
+
+| Código | Significado | Ação |
+|--------|------------|------|
+| 400 | Bad Request | Verifique os parâmetros |
+| 401 | Unauthorized | Verifique autenticação |
+| 403 | Forbidden | Verifique permissões |
+| 404 | Not Found | Verifique o ID |
+| 429 | Too Many Requests | Aguarde e tente novamente |
+| 500 | Server Error | Tente novamente mais tarde |
+| 503 | Service Unavailable | Serviço temporariamente indisponível |
+
+## Tratamento Básico
+
+### JavaScript
+
+```javascript
+async function makeRequest(url, options) {
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new ApiError(data.error, data.message, response.status);
+    }
+    
+    return data.data;
+  } catch (error) {
+    console.error('Erro:', error);
+    throw error;
+  }
+}
+
+class ApiError extends Error {
+  constructor(code, message, statusCode) {
+    super(message);
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
+```
+
+### Python
+
+```python
+import requests
+
+class ApiError(Exception):
+    def __init__(self, code, message, status_code):
+        self.code = code
+        self.message = message
+        self.status_code = status_code
+        super().__init__(message)
+
+def make_request(url, headers=None, json=None):
+    try:
+        response = requests.post(url, headers=headers, json=json)
+        data = response.json()
+        
+        if not data.get('success'):
+            raise ApiError(
+                data.get('error'),
+                data.get('message'),
+                response.status_code
+            )
+        
+        return data.get('data')
+    except requests.RequestException as e:
+        print(f'Erro de rede: {e}')
+        raise
+```
+
+## Tratamento de Erros Específicos
+
+### Erro de Validação (400)
+
+```javascript
+async function createPayment(amount, description) {
+  try {
+    const response = await fetch('/api/payments/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, description })
+    });
+    
+    const data = await response.json();
+    
+    if (response.status === 400) {
+      // Erro de validação
+      showValidationError(data.message);
+      return null;
+    }
+    
+    if (!data.success) {
+      throw new Error(data.message);
+    }
+    
+    return data.data;
+  } catch (error) {
+    showErrorMessage('Erro ao criar pagamento');
+    return null;
+  }
+}
+```
+
+### Erro de Autenticação (401)
+
+```javascript
+async function makeAuthenticatedRequest(url) {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': process.env.ZYNX_API_KEY
+      }
+    });
+    
+    if (response.status === 401) {
+      // API Key inválida
+      console.error('API Key inválida. Gere uma nova na Dashboard.');
+      // Redirecionar para página de configuração
+      window.location.href = '/settings/api-keys';
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Erro:', error);
+  }
+}
+```
+
+### Rate Limit (429)
+
+```javascript
+async function makeRequestWithRetry(url, options, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After') || 60;
+        console.log(`Rate limit. Aguardando ${retryAfter}s...`);
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => 
+            setTimeout(resolve, retryAfter * 1000)
+          );
+          continue;
+        }
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      const delay = Math.pow(2, attempt - 1) * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+```
+
+### Erro de Servidor (500)
+
+```javascript
+async function makeRequestWithFallback(url, options) {
+  try {
+    const response = await fetch(url, options);
+    
+    if (response.status >= 500) {
+      // Erro de servidor
+      console.error('Erro no servidor. Tente novamente mais tarde.');
+      
+      // Usar dados em cache se disponível
+      const cached = localStorage.getItem(`cache_${url}`);
+      if (cached) {
+        console.log('Usando dados em cache');
+        return JSON.parse(cached);
+      }
+      
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    // Armazenar em cache
+    localStorage.setItem(`cache_${url}`, JSON.stringify(data));
+    
+    return data;
+  } catch (error) {
+    console.error('Erro:', error);
+    return null;
+  }
+}
+```
+
+## Implementar Retry Automático
+
+### Com Backoff Exponencial
+
+```javascript
+async function makeRequestWithExponentialBackoff(url, options) {
+  const maxRetries = 5;
+  const baseDelay = 1000; // 1 segundo
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      const data = await response.json();
+      
+      // Sucesso
+      if (data.success) {
+        return data.data;
+      }
+      
+      // Erro que não deve fazer retry
+      if (response.status === 400 || response.status === 401) {
+        throw new Error(data.message);
+      }
+      
+      // Erro que deve fazer retry
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`Tentativa ${attempt + 1} falhou. Aguardando ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      throw new Error(data.message);
+    } catch (error) {
+      if (attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`Erro: ${error.message}. Aguardando ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+```
+
+## Logging de Erros
+
+### Implementar Sistema de Logging
+
+```javascript
+class Logger {
+  static error(message, error, context = {}) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level: 'ERROR',
+      message,
+      error: {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      },
+      context
+    };
+    
+    console.error(JSON.stringify(logEntry, null, 2));
+    
+    // Enviar para serviço de logging
+    this.sendToLoggingService(logEntry);
+  }
+  
+  static sendToLoggingService(logEntry) {
+    // Enviar para Sentry, DataDog, etc
+    fetch('/api/logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(logEntry)
+    }).catch(err => console.error('Erro ao enviar log:', err));
+  }
+}
+
+// Usar
+try {
+  await createPayment(150.50, 'Compra');
+} catch (error) {
+  Logger.error('Erro ao criar pagamento', error, {
+    amount: 150.50,
+    description: 'Compra'
+  });
+}
+```
+
+## Notificar Usuário
+
+### Mostrar Mensagens de Erro
+
+```javascript
+function showErrorMessage(message, duration = 5000) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-message';
+  errorDiv.textContent = message;
+  
+  document.body.appendChild(errorDiv);
+  
+  setTimeout(() => {
+    errorDiv.remove();
+  }, duration);
+}
+
+// CSS
+const style = document.createElement('style');
+style.textContent = `
+  .error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #f87171;
+    color: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    animation: slideIn 0.3s ease-in;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+`;
+document.head.appendChild(style);
+```
+
+## Checklist de Tratamento de Erros
+
+- [ ] Validar resposta da API
+- [ ] Tratar erros 4xx
+- [ ] Tratar erros 5xx
+- [ ] Implementar retry automático
+- [ ] Usar backoff exponencial
+- [ ] Registrar erros em log
+- [ ] Notificar usuário
+- [ ] Usar cache como fallback
+- [ ] Testar casos de erro
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Tratamento de Erros (API)"
+    icon="triangle-exclamation"
+    href="/getting-started/errors"
+  >
+    Referência de erros da API
+  </Card>
+  <Card
+    title="Boas Práticas de Segurança"
+    icon="shield"
+    href="/guides/security-best-practices"
+  >
+    Proteja sua aplicação
+  </Card>
+</CardGroup>

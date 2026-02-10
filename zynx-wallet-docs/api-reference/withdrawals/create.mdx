@@ -1,0 +1,220 @@
+---
+title: Criar Saque
+description: Solicite um saque de seus fundos
+---
+
+# Criar Saque
+
+Solicite um saque de seus fundos para sua conta bancária.
+
+## Endpoint
+
+```
+POST /v1/withdrawals/create
+```
+
+## Autenticação
+
+Requer autenticação via JWT Token (não funciona com API Key).
+
+## Parâmetros
+
+| Parâmetro | Tipo | Obrigatório | Descrição |
+|-----------|------|-------------|-----------|
+| `amount` | number | Sim | Valor do saque em reais |
+| `bank_account_id` | string | Sim | ID da conta bancária |
+| `description` | string | Não | Descrição do saque |
+
+## Obter Contas Bancárias
+
+Antes de criar um saque, você precisa ter uma conta bancária registrada. Use a API de conta para listar suas contas.
+
+## Exemplo de Requisição
+
+### cURL
+
+```bash
+curl -X POST https://api.zynxwallet.com.br/v1/withdrawals/create \
+  -H "Authorization: Bearer seu_jwt_token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 500.00,
+    "bank_account_id": "ba_abc123def456",
+    "description": "Saque mensal"
+  }'
+```
+
+### JavaScript
+
+```javascript
+async function createWithdrawal(amount, bankAccountId, description = '') {
+  const response = await fetch(
+    'https://api.zynxwallet.com.br/v1/withdrawals/create',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        amount,
+        bank_account_id: bankAccountId,
+        description
+      })
+    }
+  );
+
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+}
+
+// Usar
+const withdrawal = await createWithdrawal(500.00, 'ba_abc123def456', 'Saque mensal');
+console.log('Saque criado:', withdrawal.id);
+console.log('Status:', withdrawal.status);
+```
+
+### Python
+
+```python
+import requests
+
+def create_withdrawal(amount, bank_account_id, description='', token=None):
+    response = requests.post(
+        'https://api.zynxwallet.com.br/v1/withdrawals/create',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        },
+        json={
+            'amount': amount,
+            'bank_account_id': bank_account_id,
+            'description': description
+        }
+    )
+
+    data = response.json()
+    
+    if not data['success']:
+        raise Exception(data['message'])
+
+    return data['data']
+
+# Usar
+withdrawal = create_withdrawal(
+    500.00,
+    'ba_abc123def456',
+    'Saque mensal',
+    token='seu_jwt_token'
+)
+print(f"Saque criado: {withdrawal['id']}")
+print(f"Status: {withdrawal['status']}")
+```
+
+## Resposta de Sucesso
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "wd_abc123def456",
+    "amount": 500.00,
+    "currency": "BRL",
+    "status": "pending",
+    "bank_account": {
+      "id": "ba_abc123def456",
+      "holder_name": "João Silva",
+      "bank": "Banco do Brasil",
+      "account_number": "123456",
+      "account_type": "checking"
+    },
+    "description": "Saque mensal",
+    "created_at": "2024-02-10T12:30:00Z",
+    "updated_at": "2024-02-10T12:30:00Z",
+    "estimated_arrival": "2024-02-12T00:00:00Z"
+  }
+}
+```
+
+## Campos da Resposta
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID único do saque |
+| `amount` | number | Valor do saque |
+| `currency` | string | Moeda (sempre "BRL") |
+| `status` | string | Status do saque |
+| `bank_account` | object | Dados da conta bancária |
+| `description` | string | Descrição do saque |
+| `created_at` | string | Data de criação |
+| `estimated_arrival` | string | Data estimada de chegada |
+
+## Possíveis Status
+
+| Status | Descrição |
+|--------|-----------|
+| `pending` | Saque aguardando processamento |
+| `processing` | Saque em processamento |
+| `completed` | Saque foi transferido |
+| `failed` | Saque falhou |
+| `cancelled` | Saque foi cancelado |
+
+## Códigos de Erro
+
+### 400 - Bad Request
+
+```json
+{
+  "success": false,
+  "error": "insufficient_balance",
+  "message": "Saldo insuficiente para realizar este saque"
+}
+```
+
+**Causas comuns:**
+- Saldo insuficiente
+- Valor mínimo não atingido
+- Conta bancária inválida
+
+### 401 - Unauthorized
+
+```json
+{
+  "success": false,
+  "error": "invalid_token",
+  "message": "Token inválido ou expirado"
+}
+```
+
+## Limites de Saque
+
+| Limite | Valor |
+|--------|-------|
+| Mínimo | R$ 10.00 |
+| Máximo | R$ 50.000.00 |
+| Diário | R$ 100.000.00 |
+| Mensal | Ilimitado |
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Obter Saque"
+    icon="search"
+    href="/api-reference/withdrawals/get"
+  >
+    Consulte o status de um saque
+  </Card>
+  <Card
+    title="Listar Saques"
+    icon="list"
+    href="/api-reference/withdrawals/list"
+  >
+    Liste todos os seus saques
+  </Card>
+</CardGroup>

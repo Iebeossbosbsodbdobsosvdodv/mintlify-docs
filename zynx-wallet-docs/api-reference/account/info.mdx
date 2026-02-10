@@ -1,0 +1,160 @@
+---
+title: Obter Informações
+description: Consulte as informações da sua conta
+---
+
+# Obter Informações
+
+Obtenha as informações completas da sua conta.
+
+## Endpoint
+
+```
+GET /v1/account/info
+```
+
+## Autenticação
+
+Requer autenticação via API Key ou JWT Token.
+
+## Exemplo de Requisição
+
+### cURL
+
+```bash
+curl -X GET https://api.zynxwallet.com.br/v1/account/info \
+  -H "X-API-Key: sua_api_key_aqui"
+```
+
+### JavaScript
+
+```javascript
+async function getAccountInfo() {
+  const response = await fetch(
+    'https://api.zynxwallet.com.br/v1/account/info',
+    {
+      headers: {
+        'X-API-Key': process.env.ZYNX_API_KEY
+      }
+    }
+  );
+
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message);
+  }
+
+  return data.data;
+}
+
+// Usar
+const account = await getAccountInfo();
+console.log(`Nome: ${account.name}`);
+console.log(`Email: ${account.email}`);
+console.log(`Plano: ${account.plan}`);
+```
+
+### Python
+
+```python
+import requests
+
+def get_account_info():
+    response = requests.get(
+        'https://api.zynxwallet.com.br/v1/account/info',
+        headers={
+            'X-API-Key': os.getenv('ZYNX_API_KEY')
+        }
+    )
+
+    data = response.json()
+    
+    if not data['success']:
+        raise Exception(data['message'])
+
+    return data['data']
+
+# Usar
+account = get_account_info()
+print(f"Nome: {account['name']}")
+print(f"Email: {account['email']}")
+print(f"Plano: {account['plan']}")
+```
+
+## Resposta de Sucesso
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "user_abc123def456",
+    "email": "seu_email@example.com",
+    "name": "João Silva",
+    "phone": "11999999999",
+    "plan": "premium",
+    "status": "active",
+    "verified": true,
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-02-10T12:30:00Z",
+    "settings": {
+      "notifications_email": true,
+      "notifications_sms": false,
+      "two_factor_enabled": true
+    }
+  }
+}
+```
+
+## Campos da Resposta
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | string | ID único da conta |
+| `email` | string | Email da conta |
+| `name` | string | Nome do usuário |
+| `phone` | string | Telefone |
+| `plan` | string | Plano da conta |
+| `status` | string | Status da conta |
+| `verified` | boolean | Se o email foi verificado |
+| `created_at` | string | Data de criação |
+| `updated_at` | string | Data da última atualização |
+| `settings` | object | Configurações da conta |
+
+## Planos Disponíveis
+
+| Plano | Descrição |
+|-------|-----------|
+| `free` | Plano gratuito |
+| `starter` | Plano iniciante |
+| `professional` | Plano profissional |
+| `premium` | Plano premium |
+| `enterprise` | Plano enterprise |
+
+## Status da Conta
+
+| Status | Descrição |
+|--------|-----------|
+| `active` | Conta ativa |
+| `suspended` | Conta suspensa |
+| `inactive` | Conta inativa |
+| `pending_verification` | Aguardando verificação |
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="Obter Saldo"
+    icon="wallet"
+    href="/api-reference/account/balance"
+  >
+    Consulte seu saldo
+  </Card>
+  <Card
+    title="Listar Pagamentos"
+    icon="list"
+    href="/api-reference/payments/list"
+  >
+    Veja seus pagamentos
+  </Card>
+</CardGroup>

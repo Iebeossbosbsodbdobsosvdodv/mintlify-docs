@@ -1,0 +1,188 @@
+---
+title: Glossário
+description: Definições de termos técnicos e financeiros
+---
+
+# Glossário
+
+## Termos Técnicos
+
+### API (Application Programming Interface)
+
+Interface de programação que permite que aplicações se comuniquem entre si. A Zynx Wallet fornece uma API RESTful para integração.
+
+### API Key
+
+Chave única que identifica sua aplicação. Use para autenticar requisições à API Zynx Wallet.
+
+### Endpoint
+
+URL específica de um serviço que realiza uma ação. Por exemplo: `https://api.zynxwallet.com.br/v1/payments/create`
+
+### HTTP
+
+Protocolo de transferência de hipertexto. A API Zynx Wallet usa HTTP com métodos GET, POST, PUT, DELETE.
+
+### JSON
+
+Formato de dados legível por humanos usado para enviar e receber dados na API.
+
+### JWT (JSON Web Token)
+
+Token de autenticação que contém informações do usuário. Usado como alternativa à API Key.
+
+### Webhook
+
+Callback HTTP que notifica sua aplicação quando algo acontece. Por exemplo, quando um pagamento é confirmado.
+
+### Rate Limiting
+
+Limite de requisições que você pode fazer em um período de tempo. Evita abuso da API.
+
+### HMAC
+
+Algoritmo de autenticação que valida a origem de um webhook usando uma chave secreta.
+
+### Idempotência
+
+Propriedade de uma operação que produz o mesmo resultado mesmo se executada múltiplas vezes.
+
+## Termos Financeiros
+
+### PIX
+
+Sistema de pagamento instantâneo brasileiro. Permite transferências 24/7 via QR Code ou chave PIX.
+
+### QR Code
+
+Código bidimensional que contém informações PIX. Pode ser escaneado com app bancário.
+
+### Chave PIX
+
+Identificador único para receber PIX. Pode ser CPF, email, telefone ou chave aleatória.
+
+### Transação
+
+Movimento de dinheiro entre contas. Pode ser pagamento, saque ou transferência.
+
+### Saldo
+
+Quantidade de dinheiro disponível em sua conta Zynx Wallet.
+
+### Saldo Disponível
+
+Dinheiro que você pode usar imediatamente. Exclui valores em transações pendentes.
+
+### Saldo Pendente
+
+Dinheiro em transações que ainda não foram confirmadas.
+
+### Saque
+
+Transferência de fundos da Zynx Wallet para sua conta bancária.
+
+### Transferência
+
+Transferência de fundos entre usuários Zynx Wallet.
+
+### Pagamento
+
+Transação onde um cliente paga para você via PIX.
+
+### Confirmação
+
+Quando um pagamento é processado e o dinheiro é recebido.
+
+### Cancelamento
+
+Quando um pagamento é cancelado antes de ser confirmado.
+
+### Expiração
+
+Quando um pagamento expira e não pode mais ser pago.
+
+### Taxa
+
+Percentual ou valor fixo cobrado por cada transação.
+
+### KYC (Know Your Customer)
+
+Processo de verificação de identidade. Zynx Wallet não requer KYC.
+
+### MEDs (Mecanismos de Estorno e Devolução)
+
+Processos de devolução de dinheiro. Zynx Wallet não possui MEDs - transações são irreversíveis.
+
+## Termos de Negócio
+
+### Plano
+
+Nível de serviço com diferentes limites e taxas. Exemplos: Free, Starter, Professional, Premium, Enterprise.
+
+### Assinatura
+
+Pagamento recorrente para manter acesso a um serviço.
+
+### Integração
+
+Processo de conectar sua aplicação com a API Zynx Wallet.
+
+### Dashboard
+
+Painel de controle onde você gerencia sua conta, pagamentos, saques e configurações.
+
+### Metadata
+
+Dados customizados que você pode armazenar com uma transação para rastreamento.
+
+### Webhook Secret
+
+Chave secreta usada para validar webhooks. Mantenha segura.
+
+### Ambiente
+
+Versão do serviço: Production (real) ou Sandbox/Testing (testes).
+
+### Retry
+
+Tentativa automática de realizar uma ação novamente se falhar.
+
+## Abreviações
+
+| Abreviação | Significado |
+|------------|------------|
+| API | Application Programming Interface |
+| JWT | JSON Web Token |
+| HTTP | HyperText Transfer Protocol |
+| HTTPS | HTTP Secure |
+| REST | Representational State Transfer |
+| JSON | JavaScript Object Notation |
+| HMAC | Hash-based Message Authentication Code |
+| PIX | Pagamento Instantâneo |
+| QR | Quick Response |
+| KYC | Know Your Customer |
+| MEDs | Mecanismos de Estorno e Devolução |
+| BRL | Real Brasileiro |
+| CPF | Cadastro de Pessoa Física |
+| CNPJ | Cadastro Nacional da Pessoa Jurídica |
+| TED | Transferência Eletrônica de Débito |
+| DOC | Documento de Crédito |
+
+## Próximos Passos
+
+<CardGroup cols={2}>
+  <Card
+    title="FAQ"
+    icon="question"
+    href="/resources/faq"
+  >
+    Perguntas frequentes
+  </Card>
+  <Card
+    title="Introdução"
+    icon="book"
+    href="/introduction"
+  >
+    Voltar para introdução
+  </Card>
+</CardGroup>
