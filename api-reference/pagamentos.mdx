@@ -1,98 +1,137 @@
 ---
-title: Pagamentos
-icon: credit-card
+title: "Pagamentos PIX"
+description: "Endpoints para criação e gerenciamento de pagamentos via PIX."
 ---
 
 ## Criar Pagamento PIX
 
-Cria uma nova transação PIX e gera o QR Code e o código Copia e Cola.
+Este endpoint permite gerar um novo QR Code PIX para recebimento.
 
-<RequestExample>
-  ```bash POST /payment/create
-  curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/create' \
-    -H 'X-API-Key: zynx_sua_chave_aqui' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "value": 150.00,
-      "description": "Venda de Produto #123",
-      "coverFee": true
-    }'
-  ```
-</RequestExample>
+### Requisição
 
-### Parâmetros do Corpo
+<ParamField body="value" type="number" required>
+  O valor da transação em Reais (ex: 150.00). Mínimo R$ 1,00.
+</ParamField>
 
-<ResponseField name="value" type="number" required>
-  Valor em reais (ex: 100.50). Mínimo R$ 1,00.
-</ResponseField>
-<ResponseField name="description" type="string">
-  Descrição que aparecerá no extrato.
-</ResponseField>
-<ResponseField name="coverFee" type="boolean">
-  Se `true`, a taxa é adicionada ao valor total. Se `false`, a taxa é descontada do valor recebido.
-</ResponseField>
-<ResponseField name="splitUser" type="string">
-  Email de outro usuário Zynx para divisão de valores.
-</ResponseField>
-<ResponseField name="splitTax" type="number">
-  Porcentagem (0.01 a 100) para o `splitUser`.
-</ResponseField>
+<ParamField body="description" type="string">
+  Uma descrição curta para a transação que aparecerá no extrato.
+</ParamField>
+
+<ParamField body="coverFee" type="boolean" default="false">
+  Se `true`, a taxa de R$ 0.50 será descontada do valor recebido. Se `false`, a taxa será cobrada separadamente do saldo da conta.
+</ParamField>
+
+<ParamField body="splitUser" type="string">
+  E-mail de outro usuário Zynx para divisão de valores (opcional).
+</ParamField>
+
+<ParamField body="splitTax" type="number">
+  Porcentagem (0.01 a 100) para o `splitUser` (opcional).
+</ParamField>
 
 ### Resposta
 
+<ResponseField name="success" type="boolean">
+  Indica se a operação foi bem-sucedida.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="Propriedades do Objeto">
+    <ResponseField name="id" type="string">
+      ID único da transação gerada.
+    </ResponseField>
+    <ResponseField name="transactionId" type="string">
+      ID interno da transação.
+    </ResponseField>
+    <ResponseField name="valueInReais" type="number">
+      Valor total em reais.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Status inicial da transação (geralmente `PENDING`).
+    </ResponseField>
+    <ResponseField name="qrcodeUrl" type="string">
+      URL ou Base64 da imagem do QR Code.
+    </ResponseField>
+    <ResponseField name="copyPaste" type="string">
+      Código PIX Copia e Cola.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url https://api.zynxwallet.com.br/api/v1/payment/create \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: zynx_sua_chave' \
+  --data '{
+  "value": 150.00,
+  "description": "Venda de Produto #123",
+  "coverFee": true
+}'
+```
+
+</RequestExample>
+
 <ResponseExample>
-  ```json 201
-  {
-    "success": true,
-    "data": {
-      "id": "pay_abc123",
-      "transactionId": "mistic_xyz789",
-      "valueInReais": 153.00,
-      "netValue": 15000,
-      "fee": 300,
-      "status": "PENDING",
-      "qrcodeUrl": "data:image/png;base64,...",
-      "copyPaste": "00020126360014br.gov.bcb.brcode...",
-      "createdAt": "2024-02-16T15:00:00Z"
-    }
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "data": {
+    "id": "pay_abc123",
+    "transactionId": "mistic_xyz789",
+    "valueInReais": 150.00,
+    "netValue": 14950,
+    "fee": 50,
+    "status": "PENDING",
+    "qrcodeUrl": "data:image/png;base64,...",
+    "copyPaste": "00020126360014br.gov.bcb.brcode...",
+    "createdAt": "2024-02-16T15:00:00Z"
   }
-  ```
+}
+```
+
 </ResponseExample>
 
 ---
 
-## Consultar Status de Pagamento
+## Consultar Pagamento
 
-Verifica os detalhes e o status atual de um pagamento específico.
+Verifica o status atual de um pagamento específico.
+
+### Requisição
+
+<ParamField path="id" type="string" required>
+  O ID da transação retornado na criação.
+</ParamField>
 
 <RequestExample>
-  ```bash GET /payment/get/{id}
-  curl 'https://api.zynxwallet.com.br/api/v1/payment/get/pay_abc123' \
-    -H 'X-API-Key: zynx_sua_chave_aqui'
-  ```
+
+```bash cURL
+curl --request GET \
+  --url https://api.zynxwallet.com.br/api/v1/payment/get/pay_abc123 \
+  --header 'X-API-Key: zynx_sua_chave'
+```
+
 </RequestExample>
 
-### Parâmetros da URL
-
-<ResponseField name="id" type="string" required>
-  O ID do pagamento retornado na criação.
-</ResponseField>
-
-### Resposta
-
 <ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "data": {
-      "id": "pay_abc123",
-      "status": "COMPLETED",
-      "value": 15300,
-      "netValue": 15000,
-      "updatedAt": "2024-02-16T15:05:00Z"
-    }
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "data": {
+    "id": "pay_abc123",
+    "status": "COMPLETED",
+    "value": 15000,
+    "netValue": 14950,
+    "updatedAt": "2024-02-16T15:05:00Z"
   }
-  ```
+}
+```
+
 </ResponseExample>
 
 ---
@@ -101,40 +140,22 @@ Verifica os detalhes e o status atual de um pagamento específico.
 
 Retorna uma lista paginada de todos os seus pagamentos.
 
-<RequestExample>
-  ```bash GET /payment/list
-  curl 'https://api.zynxwallet.com.br/api/v1/payment/list?status=COMPLETED&limit=10' \
-    -H 'X-API-Key: zynx_sua_chave_aqui'
-  ```
-</RequestExample>
+### Requisição
 
-### Parâmetros da Query
-
-<ResponseField name="status" type="string">
+<ParamField query="status" type="string">
   Filtrar por status (`PENDING`, `COMPLETED`, `FAILED`).
-</ResponseField>
-<ResponseField name="limit" type="integer">
-  Quantidade por página (padrão 50, máx 1000).
-</ResponseField>
-<ResponseField name="offset" type="integer">
-  Pular registros (padrão 0).
-</ResponseField>
+</ParamField>
 
-### Resposta
+<ParamField query="limit" type="integer" default="50">
+  Quantidade por página (máx 1000).
+</ParamField>
 
-<ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "data": [
-      {
-        "id": "pay_abc123",
-        "status": "COMPLETED",
-        "value": 15300,
-        "netValue": 15000,
-        "updatedAt": "2024-02-16T15:05:00Z"
-      }
-    ]
-  }
-  ```
-</ResponseExample>
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url 'https://api.zynxwallet.com.br/api/v1/payment/list?status=COMPLETED&limit=10' \
+  --header 'X-API-Key: zynx_sua_chave'
+```
+
+</RequestExample>

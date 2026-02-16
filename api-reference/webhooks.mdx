@@ -1,49 +1,73 @@
 ---
-title: Webhooks
-icon: bell
+title: "Webhooks"
+description: "Receba notificações em tempo real sobre eventos na sua conta."
 ---
 
 ## Configurar Webhook
 
-Configure webhooks para receber notificações em tempo real sobre eventos importantes, como a conclusão de um pagamento ou a criação de um saque.
+Configure webhooks para receber notificações automáticas em tempo real sobre eventos importantes, como a confirmação de um pagamento ou o processamento de um saque.
+
+### Requisição
+
+<ParamField body="url" type="string" required>
+  URL do seu servidor que receberá as notificações (POST).
+</ParamField>
+
+<ParamField body="events" type="array" required>
+  Lista de eventos para monitorar (ex: `["payment.completed", "withdrawal.created"]`).
+</ParamField>
 
 <RequestExample>
-  ```bash POST /webhooks
-  curl -X POST 'https://api.zynxwallet.com.br/api/v1/webhooks' \
-    -H 'X-API-Key: zynx_sua_chave_aqui' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "url": "https://seusite.com/webhook",
-      "events": ["payment.completed", "withdrawal.created"]
-    }'
-  ```
+
+```bash cURL
+curl --request POST \
+  --url https://api.zynxwallet.com.br/api/v1/webhooks \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: zynx_sua_chave' \
+  --data '{
+  "url": "https://seusite.com/webhook",
+  "events": ["payment.completed", "withdrawal.created"]
+}'
+```
+
 </RequestExample>
 
-### Parâmetros do Corpo
-
-<ResponseField name="url" type="string" required>
-  URL para onde as notificações do webhook serão enviadas.
-</ResponseField>
-<ResponseField name="events" type="array" required>
-  Lista de eventos para os quais o webhook deve ser acionado (ex: `payment.completed`, `withdrawal.created`).
-</ResponseField>
-
-### Resposta
-
 <ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "message": "Webhook configurado com sucesso"
-  }
-  ```
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "message": "Webhook configurado com sucesso"
+}
+```
+
 </ResponseExample>
 
 ---
 
-## Estrutura do Payload do Webhook
+## Estrutura do Payload
 
-Os webhooks enviarão um payload JSON para a URL configurada. A estrutura básica do payload é a seguinte:
+Quando um evento ocorre, a Zynx Wallet enviará um `POST` para sua URL com o seguinte formato:
+
+<ResponseField name="event" type="string">
+  O tipo do evento ocorrido.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="Detalhes do Evento">
+    <ResponseField name="id" type="string">
+      ID da transação relacionada.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Novo status da transação (`COMPLETED`, `FAILED`, etc).
+    </ResponseField>
+    <ResponseField name="value" type="number">
+      Valor da transação em centavos.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Exemplo de Notificação
 
 ```json
 {
@@ -61,8 +85,10 @@ Os webhooks enviarão um payload JSON para a URL configurada. A estrutura básic
 
 ### Eventos Suportados
 
--   `payment.completed`: Um pagamento PIX foi concluído com sucesso.
--   `payment.failed`: Um pagamento PIX falhou.
--   `withdrawal.created`: Um saque foi solicitado.
--   `withdrawal.completed`: Um saque foi concluído com sucesso.
--   `withdrawal.failed`: Um saque falhou.
+| Evento | Descrição |
+| :--- | :--- |
+| `payment.completed` | Um pagamento PIX foi confirmado. |
+| `payment.failed` | Um pagamento PIX expirou ou falhou. |
+| `withdrawal.created` | Um novo saque foi solicitado. |
+| `withdrawal.completed` | Um saque foi processado com sucesso. |
+| `withdrawal.failed` | Um saque foi rejeitado ou falhou. |

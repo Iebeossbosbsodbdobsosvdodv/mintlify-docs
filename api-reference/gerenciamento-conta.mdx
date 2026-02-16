@@ -1,36 +1,60 @@
 ---
-title: Gerenciamento de Conta
-icon: wallet
+title: "Gerenciamento de Conta"
+description: "Endpoints para consultar saldo e estatísticas da sua conta."
 ---
 
 ## Consultar Saldo e Estatísticas
 
 Retorna o saldo disponível, valores pendentes e estatísticas de uso da sua conta Zynx.
 
+### Requisição
+
 <RequestExample>
-  ```bash GET /user/balance
-  curl 'https://api.zynxwallet.com.br/api/v1/user/balance' \
-    -H 'X-API-Key: zynx_sua_chave_aqui'
-  ```
+
+```bash cURL
+curl --request GET \
+  --url https://api.zynxwallet.com.br/api/v1/user/balance \
+  --header 'X-API-Key: zynx_sua_chave'
+```
+
 </RequestExample>
 
-### Resposta
-
 <ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "data": {
-      "balance": {
-        "total": 1250050,
-        "pendingPayments": 45000,
-        "totalWithPending": 1295050
-      },
-      "statistics": {
-        "totalReceived": 5000000,
-        "completedPayments": 342
-      }
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "data": {
+    "balance": {
+      "total": 1250050,
+      "pendingPayments": 45000,
+      "totalWithPending": 1295050
+    },
+    "statistics": {
+      "totalReceived": 5000000,
+      "completedPayments": 342
     }
   }
-  ```
+}
+```
+
 </ResponseExample>
+
+<Info>
+  Os valores de saldo são retornados em **centavos** (ex: 1250050 = R$ 12.500,50).
+</Info>
+
+---
+
+## Categorias de Usuário
+
+A Zynx Wallet possui duas categorias principais de usuários que influenciam as taxas e limites:
+
+| Categoria | Descrição | Taxa PIX |
+| :--- | :--- | :--- |
+| **WHITE** | Categoria padrão para novos usuários. | R$ 0.50 |
+| **BLACK** | Categoria para usuários de alto volume. | Sob consulta |
+
+<Tip>
+  Para migrar sua conta para a categoria **BLACK**, entre em contato com nosso suporte comercial.
+</Tip>

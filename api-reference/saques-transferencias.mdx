@@ -1,94 +1,106 @@
 ---
-title: Saques e Transferências
-icon: arrow-right-arrow-left
+title: "Saques e Transferências"
+description: "Endpoints para retirar fundos da sua conta Zynx."
 ---
 
 ## Solicitar Saque PIX
 
-Transfere saldo da sua conta Zynx para uma chave PIX externa.
+Transfere saldo da sua conta Zynx para uma chave PIX externa. **Não há taxas para saques.**
+
+### Requisição
+
+<ParamField body="amount" type="number" required>
+  Valor em reais a ser sacado.
+</ParamField>
+
+<ParamField body="pixKey" type="string" required>
+  Chave PIX de destino.
+</ParamField>
+
+<ParamField body="pixKeyType" type="string" required>
+  Tipo da chave: `CPF`, `CNPJ`, `EMAIL`, `PHONE` ou `RANDOM`.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Descrição da retirada que aparecerá no extrato.
+</ParamField>
 
 <RequestExample>
-  ```bash POST /withdraw/create
-  curl -X POST 'https://api.zynxwallet.com.br/api/v1/withdraw/create' \
-    -H 'X-API-Key: zynx_sua_chave_aqui' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "amount": 500.00,
-      "pixKey": "12345678900",
-      "pixKeyType": "CPF",
-      "description": "Retirada de Lucro"
-    }'
-  ```
+
+```bash cURL
+curl --request POST \
+  --url https://api.zynxwallet.com.br/api/v1/withdraw/create \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: zynx_sua_chave' \
+  --data '{
+  "amount": 500.00,
+  "pixKey": "12345678900",
+  "pixKeyType": "CPF",
+  "description": "Retirada de Lucro"
+}'
+```
+
 </RequestExample>
 
-### Parâmetros do Corpo
-
-<ResponseField name="amount" type="number" required>
-  Valor em reais.
-</ResponseField>
-<ResponseField name="pixKey" type="string" required>
-  Chave PIX de destino.
-</ResponseField>
-<ResponseField name="pixKeyType" type="string" required>
-  `CPF`, `CNPJ`, `EMAIL`, `PHONE` ou `RANDOM`.
-</ResponseField>
-<ResponseField name="description" type="string">
-  Descrição da retirada.
-</ResponseField>
-
-### Resposta
-
 <ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "message": "Saque solicitado com sucesso"
-  }
-  ```
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "message": "Saque solicitado com sucesso"
+}
+```
+
 </ResponseExample>
 
 ---
 
-## Enviar Dinheiro (Reembolso/Transferência)
+## Enviar Dinheiro (Transferência/Reembolso)
 
-Realiza um envio direto de valores. Ideal para automação de reembolsos.
+Realiza um envio direto de valores para uma chave PIX. Ideal para automação de reembolsos ou pagamentos a fornecedores.
+
+### Requisição
+
+<ParamField body="amount" type="number" required>
+  Valor em reais.
+</ParamField>
+
+<ParamField body="pixKey" type="string" required>
+  Chave PIX de destino.
+</ParamField>
+
+<ParamField body="pixKeyType" type="string" required>
+  `CPF`, `CNPJ`, `EMAIL`, `PHONE` ou `RANDOM`.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Descrição da transferência.
+</ParamField>
 
 <RequestExample>
-  ```bash POST /payment/send
-  curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/send' \
-    -H 'X-API-Key: zynx_sua_chave_aqui' \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "amount": 25.50,
-      "pixKey": "cliente@email.com",
-      "pixKeyType": "EMAIL",
-      "description": "Reembolso Pedido #99"
-    }'
-  ```
+
+```bash cURL
+curl --request POST \
+  --url https://api.zynxwallet.com.br/api/v1/payment/send \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: zynx_sua_chave' \
+  --data '{
+  "amount": 25.50,
+  "pixKey": "cliente@email.com",
+  "pixKeyType": "EMAIL",
+  "description": "Reembolso Pedido #99"
+}'
+```
+
 </RequestExample>
 
-### Parâmetros do Corpo
-
-<ResponseField name="amount" type="number" required>
-  Valor em reais.
-</ResponseField>
-<ResponseField name="pixKey" type="string" required>
-  Chave PIX de destino.
-</ResponseField>
-<ResponseField name="pixKeyType" type="string" required>
-  `CPF`, `CNPJ`, `EMAIL`, `PHONE` ou `RANDOM`.
-</ResponseField>
-<ResponseField name="description" type="string">
-  Descrição da transferência.
-</ResponseField>
-
-### Resposta
-
 <ResponseExample>
-  ```json 200
-  {
-    "success": true,
-    "message": "Transferência realizada com sucesso"
-  }
-  ```
+
+```json Exemplo de Resposta
+{
+  "success": true,
+  "message": "Transferência realizada com sucesso"
+}
+```
+
 </ResponseExample>

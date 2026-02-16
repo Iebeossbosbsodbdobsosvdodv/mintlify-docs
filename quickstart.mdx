@@ -1,13 +1,15 @@
 ---
-title: Início Rápido
-icon: bolt
+title: "Início Rápido"
+description: "Aprenda a configurar sua integração com a Zynx Wallet em menos de 5 minutos."
 ---
-
-Este guia rápido irá ajudá-lo a começar a usar a API Zynx Wallet em poucos passos.
 
 ## 1. Obtenha sua Chave de API
 
-Primeiro, você precisará de uma `X-API-Key`. Acesse o painel administrativo da Zynx Wallet para gerar sua chave. Lembre-se que o prefixo da chave é `zynx_`.
+Para começar, você precisará de uma chave de API válida. Você pode gerá-la no seu painel de controle.
+
+<Note>
+  Todas as chaves de API da Zynx começam com o prefixo `zynx_`. Nunca compartilhe sua chave secreta.
+</Note>
 
 ## 2. Base URL
 
@@ -19,35 +21,34 @@ https://api.zynxwallet.com.br/api/v1
 
 ## 3. Autenticação
 
-Inclua sua `X-API-Key` no cabeçalho de todas as requisições:
-
-```
-Header: X-API-Key
-Value: zynx_sua_chave_aqui
-```
-
-## 4. Exemplo de Requisição (Criar Pagamento PIX)
-
-Para criar um pagamento PIX, envie uma requisição `POST` para o endpoint `/payment/create`.
+A autenticação é feita através do cabeçalho `X-API-Key` em todas as requisições.
 
 ```bash
-curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/create' \
-  -H 'X-API-Key: zynx_sua_chave_aqui' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "value": 150.00,
-    "description": "Venda de Produto #123",
-    "coverFee": true
-  }'
+X-API-Key: zynx_sua_chave_aqui
 ```
 
-## 5. Fluxo de Integração Recomendado
+## 4. Sua Primeira Requisição
 
-Para uma experiência perfeita, siga este fluxo:
+Tente criar um pagamento de teste usando o comando `curl` abaixo:
 
-1.  **Criação:** Chame `POST /payment/create` e exiba o QR Code para o cliente.
-2.  **Aguarde:** O cliente realiza o pagamento via app do banco.
-3.  **Notificação:** Seu servidor recebe um POST no Webhook configurado.
-4.  **Confirmação:** Valide o payload do webhook e libere o produto/serviço.
+```bash
+curl --request POST \
+  --url https://api.zynxwallet.com.br/api/v1/payment/create \
+  --header 'Content-Type: application/json' \
+  --header 'X-API-Key: zynx_sua_chave' \
+  --data '{
+  "value": 5.00,
+  "description": "Meu primeiro pagamento",
+  "coverFee": true
+}'
+```
 
-Para mais detalhes sobre os endpoints e exemplos completos, consulte a [Referência da API](/api-reference/pagamentos).
+## Próximos Passos
+
+Agora que você já sabe como se autenticar, explore os recursos avançados:
+
+<CardGroup cols={3}>
+  <Card title="Pagamentos" icon="qrcode" href="/api-reference/pagamentos" />
+  <Card title="Saques" icon="money-bill-transfer" href="/api-reference/saques-transferencias" />
+  <Card title="Webhooks" icon="bell" href="/api-reference/webhooks" />
+</CardGroup>
