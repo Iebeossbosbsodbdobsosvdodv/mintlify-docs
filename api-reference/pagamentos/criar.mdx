@@ -1,67 +1,250 @@
 ---
 title: "Criar Pagamento PIX"
-api: "POST /payment/create"
-description: "Cria uma nova transação PIX e gera o QR Code e o código Copia e Cola."
+api: "POST /api/v1/payment/create"
+description: "Cria uma nova transação PIX e retorna o QR Code e o código Copia e Cola para pagamento."
 ---
 
-Este é o endpoint principal para receber pagamentos. Ele gera um QR Code dinâmico que pode ser lido por qualquer aplicativo bancário brasileiro.
+Este é o endpoint principal para receber pagamentos na plataforma.  
+Ele gera um **QR Code PIX dinâmico** e um **código Copia e Cola**, permitindo que qualquer aplicativo bancário brasileiro realize o pagamento.
 
-### Parâmetros do Corpo (JSON)
+A transação é criada instantaneamente e permanece aguardando confirmação até que o pagamento seja efetuado pelo cliente.
+
+---
+
+## Autenticação
+
+Este endpoint **requer autenticação obrigatória**.
+
+Envie sua chave de API no header:
+
+```bash
+X-API-Key: zynx_sua_chave_aqui
+```
+
+Sem autenticação válida, a API retornará:
+
+```json
+{
+  "error": "Unauthorized"
+}
+```
+
+---
+
+## Limites da Transação
+
+| Tipo | Valor |
+|-----|------|
+Valor mínimo | **R$ 1,00**
+Valor máximo | **R$ 1.000,00**
+Moeda | Real Brasileiro (BRL)
+
+Todos os valores são armazenados internamente **em centavos** para evitar erros de arredondamento.
+
+---
+
+## Rate Limit
+
+Para evitar abuso da API, existem limites de requisição:
+
+| Tipo de autenticação | Limite |
+|----------------------|--------|
+API Key | 30 requisições por minuto |
+JWT | 20 requisições por minuto |
+
+Se o limite for excedido:
+
+```json
+{
+  "error": "Too many requests"
+}
+```
+
+---
+
+# Parâmetros do Corpo (JSON)
 
 <ParamField body="value" type="number" required>
-  Valor em reais (ex: 100.50). O valor mínimo permitido é **R$ 1,00**.
+Valor da transação em **reais**.
+
+Exemplo:
+
+```
+10
+10.50
+150.99
+```
+
+O valor mínimo permitido é **R$ 1,00** e o máximo **R$ 1.000,00**.
 </ParamField>
 
 <ParamField body="description" type="string">
-  Texto que aparecerá no extrato do cliente e no seu painel Zynx. Máximo de 255 caracteres.
+Descrição do pagamento.
+
+Este texto será armazenado internamente no seu painel e no histórico da transação.
+
+Máximo: **255 caracteres**.
+
+Exemplo:
+
+```
+Venda Produto #123
+Pagamento Plano Premium
+Compra no site
+```
 </ParamField>
 
 <ParamField body="coverFee" type="boolean" default="false">
-  Define quem paga a taxa de R$ 0.50:
-  - `true`: A taxa é somada ao valor total (o cliente paga a taxa).
-  - `false`: A taxa é descontada do valor recebido (você paga a taxa).
+Define quem paga a taxa da plataforma.
+
+- `true` → o cliente paga a taxa
+- `false` → a taxa é descontada do valor recebido
+
+Exemplo:
+
+| Valor enviado | coverFee | Cliente paga | Você recebe |
+|---------------|----------|--------------|-------------|
+100 | false | 100 | 99.50 |
+100 | true | 100.50 | 100 |
 </ParamField>
 
 <ParamField body="splitUser" type="string">
-  E-mail de outro usuário Zynx cadastrado para receber uma parte do valor automaticamente.
+Email de outro usuário da plataforma que receberá automaticamente uma parte do pagamento.
+
+Esse recurso permite dividir receitas entre contas.
+
+Exemplo:
+
+```
+parceiro@zynx.com
+```
 </ParamField>
 
 <ParamField body="splitTax" type="number">
-  Porcentagem (0.01 a 100) do valor que será enviado para o `splitUser`.
+Porcentagem do valor enviada para o usuário definido em `splitUser`.
+
+Intervalo permitido:
+
+```
+0.01 → 100
+```
+
+Exemplo:
+
+```
+10
+25
+50
+```
+
+Se `splitTax = 10`, então **10% do pagamento será enviado para o usuário definido no split**.
 </ParamField>
 
-### Entendendo a Resposta
+---
 
-A Zynx retorna valores monetários em **centavos** para garantir precisão total.
+# Fluxo de Criação do Pagamento
+
+Quando uma requisição é enviada para este endpoint, o sistema executa as seguintes etapas:
+
+1. valida autenticação
+2. valida valor da transação
+3. valida parâmetros de split
+4. calcula taxa da plataforma
+5. calcula valor líquido do usuário
+6. cria transação na gateway de pagamento
+7. salva pagamento no banco de dados
+8. registra log de auditoria
+9. retorna QR Code e código PIX
+
+Esse fluxo garante segurança e consistência das transações.
+
+---
+
+# Status da Transação
+
+| Status | Descrição |
+|------|-----------|
+PENDING | aguardando pagamento |
+COMPLETED | pagamento confirmado |
+
+---
+
+# Entendendo a Resposta
+
+A API retorna valores financeiros **em centavos** para garantir precisão total.
 
 <ResponseField name="success" type="boolean">
-  Indica se a transação foi criada com sucesso no nosso gateway.
+Indica se a transação foi criada com sucesso.
 </ResponseField>
 
 <ResponseField name="data" type="object">
-  <Expandable title="Propriedades do Objeto">
-    <ResponseField name="id" type="string">
-      ID único da transação na Zynx (ex: `pay_abc123`). Use este ID para consultas futuras.
-    </ResponseField>
-    <ResponseField name="valueInReais" type="number">
-      O valor exato que o cliente deve pagar no banco.
-    </ResponseField>
-    <ResponseField name="netValue" type="number">
-      O valor líquido que entrará no seu saldo (em centavos).
-    </ResponseField>
-    <ResponseField name="fee" type="number">
-      O valor da taxa aplicada (em centavos).
-    </ResponseField>
-    <ResponseField name="qrcodeUrl" type="string">
-      String Base64 da imagem do QR Code. Pode ser usada diretamente em uma tag `<img src="..." />`.
-    </ResponseField>
-    <ResponseField name="copyPaste" type="string">
-      Código PIX Copia e Cola para usuários que estão no celular.
-    </ResponseField>
-  </Expandable>
+<Expandable title="Propriedades do Objeto">
+
+<ResponseField name="id" type="string">
+ID único da transação na plataforma.
+
+Exemplo:
+
+```
+pay_abc123
+```
+
+Este ID deve ser armazenado no seu sistema para conciliação de pagamentos.
 </ResponseField>
 
+<ResponseField name="transactionId" type="string">
+ID da transação gerado pela gateway de pagamento.
+</ResponseField>
+
+<ResponseField name="value" type="number">
+Valor total da transação **em centavos**.
+</ResponseField>
+
+<ResponseField name="valueInReais" type="number">
+Valor exato que o cliente deve pagar no banco.
+</ResponseField>
+
+<ResponseField name="netValue" type="number">
+Valor líquido que entrará no seu saldo **em centavos**.
+</ResponseField>
+
+<ResponseField name="fee" type="number">
+Valor da taxa aplicada **em centavos**.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+Status atual da transação.
+</ResponseField>
+
+<ResponseField name="qrcodeUrl" type="string">
+Imagem do QR Code em **Base64**.
+
+Pode ser usada diretamente em HTML:
+
+```
+<img src="data:image/png;base64,..." />
+```
+</ResponseField>
+
+<ResponseField name="copyPaste" type="string">
+Código PIX Copia e Cola.
+
+Ideal para usuários que estão no celular.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+Data de criação da transação no formato ISO 8601.
+</ResponseField>
+
+</Expandable>
+</ResponseField>
+
+---
+
+# Exemplo de Requisição
+
 <RequestExample>
+
 ```bash cURL
 curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/create' \
   -H 'X-API-Key: zynx_sua_chave_aqui' \
@@ -74,15 +257,22 @@ curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/create' \
     "splitTax": 10.0
   }'
 ```
+
 </RequestExample>
 
+---
+
+# Exemplo de Resposta
+
 <ResponseExample>
-```json Resposta de Sucesso
+
+```json
 {
   "success": true,
   "data": {
     "id": "pay_abc123",
     "transactionId": "mistic_xyz789",
+    "value": 15300,
     "valueInReais": 153.00,
     "netValue": 15000,
     "fee": 300,
@@ -93,8 +283,85 @@ curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/create' \
   }
 }
 ```
+
 </ResponseExample>
 
+---
+
+# Erros Possíveis
+
+## Valor inválido
+
+```json
+{
+  "error": "Valor inválido",
+  "message": "Envie um valor maior que zero"
+}
+```
+
+## Valor muito baixo
+
+```json
+{
+  "error": "Valor muito baixo",
+  "message": "O valor mínimo é R$ 1.00"
+}
+```
+
+## Valor muito alto
+
+```json
+{
+  "error": "Valor muito alto",
+  "message": "O valor máximo por pagamento é R$ 1000.00"
+}
+```
+
+## Split inválido
+
+```json
+{
+  "error": "Split inválido",
+  "message": "Você não pode fazer split para sua própria conta"
+}
+```
+
+## Usuário de split não encontrado
+
+```json
+{
+  "error": "Usuário de split não encontrado",
+  "message": "Não foi encontrada uma conta ativa com este email"
+}
+```
+
+---
+
 <Tip>
-  **Dica de Implementação:** Sempre salve o `id` retornado em seu banco de dados associado ao pedido do seu cliente. Isso facilitará a conciliação quando o webhook de confirmação chegar.
+
+**Dica de Implementação**
+
+Sempre salve o campo **`id`** retornado pela API no seu banco de dados junto com o pedido do cliente.
+
+Isso permite:
+
+- rastrear pagamentos
+- conciliar vendas
+- identificar pagamentos via webhook
+- consultar status posteriormente
+
 </Tip>
+
+---
+
+# Boas práticas
+
+- sempre valide valores antes de enviar para a API  
+- armazene o ID da transação  
+- utilize webhooks para confirmação automática de pagamentos  
+- nunca exponha sua API Key no frontend  
+- utilize HTTPS em todas as requisições
+
+---
+
+Este endpoint foi projetado para oferecer **pagamentos PIX rápidos, seguros e confiáveis** dentro da plataforma.
