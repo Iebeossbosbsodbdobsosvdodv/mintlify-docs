@@ -1,46 +1,218 @@
 ---
-title: "Enviar Dinheiro (Reembolso/Transferência)"
-api: "POST /payment/send"
-description: "Realiza um envio direto de valores. Ideal para automação de reembolsos."
+title: "Enviar Pagamento"
+api: "POST /api/v1/payment/send"
+description: "Envia dinheiro via PIX a partir do saldo da conta."
 ---
 
-### Parâmetros do Corpo (JSON)
+Este endpoint permite **enviar dinheiro ou realizar reembolsos via PIX** usando o saldo da conta.
+
+Fluxo do envio:
+
+1. valida os campos obrigatórios
+2. calcula a taxa da transação
+3. debita o saldo do usuário
+4. envia o pagamento pela gateway
+5. registra auditoria
+6. dispara webhook
+
+---
+
+# Autenticação
+
+Este endpoint funciona **apenas com API Key**.
+
+Header obrigatório:
+
+```bash
+X-API-Key: zynx_sua_chave_aqui
+```
+
+---
+
+# Rate Limit
+
+| Tipo | Limite |
+|-----|------|
+API Key | 30 requisições por minuto |
+
+---
+
+# Parâmetros
 
 <ParamField body="amount" type="number" required>
-  Valor em reais.
+Valor do envio em reais.
 </ParamField>
 
 <ParamField body="pixKey" type="string" required>
-  Chave PIX de destino.
+Chave PIX de destino.
 </ParamField>
 
 <ParamField body="pixKeyType" type="string" required>
-  `CPF`, `CNPJ`, `EMAIL`, `PHONE` ou `RANDOM`.
+Tipo da chave PIX.
+
+Valores aceitos:
+
+```
+CPF
+EMAIL
+PHONE
+RANDOM
+CNPJ
+```
 </ParamField>
 
 <ParamField body="description" type="string">
-  Descrição da transferência.
+Descrição opcional da transação.
+
+Máximo de **100 caracteres**.
 </ParamField>
 
+---
+
+# Exemplo de requisição
+
 <RequestExample>
-```bash cURL
-curl -X POST 'https://api.zynxwallet.com.br/api/v1/payment/send' \
-  -H 'X-API-Key: zynx_sua_chave_aqui' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "amount": 25.50,
-    "pixKey": "cliente@email.com",
-    "pixKeyType": "EMAIL",
-    "description": "Reembolso Pedido #99"
-  }'
+
+```bash
+curl -X POST "https://api.zynxwallet.com.br/api/v1/payment/send" \
+-H "Content-Type: application/json" \
+-H "X-API-Key: zynx_sua_chave_aqui" \
+-d '{
+"amount": 100,
+"pixKey": "email@exemplo.com",
+"pixKeyType": "EMAIL",
+"description": "Reembolso"
+}'
 ```
+
 </RequestExample>
 
+---
+
+# Como a taxa funciona
+
+A taxa é calculada automaticamente com base no **plano do usuário**.
+
+Fluxo:
+
+```
+valor enviado = valor solicitado - taxa
+```
+
+Exemplo:
+
+| Campo | Valor |
+|------|------|
+valor solicitado | R$100 |
+taxa | R$2 |
+valor enviado | R$98 |
+
+---
+
+# Exemplo de resposta
+
 <ResponseExample>
-```json Resposta
+
+```json
 {
   "success": true,
-  "message": "Transferência realizada com sucesso"
+  "message": "Envio processado com sucesso",
+  "data": {
+    "amount": 10000,
+    "fee": 200,
+    "sent": 9800,
+    "destination": "email@exemplo.com",
+    "mistic": {
+      "status": "success",
+      "transactionId": "tx_91283"
+    }
+  }
 }
 ```
+
 </ResponseExample>
+
+---
+
+# Estrutura da resposta
+
+<ResponseField name="data.amount" type="number">
+Valor total debitado da conta em centavos.
+</ResponseField>
+
+<ResponseField name="data.fee" type="number">
+Taxa cobrada pela transação.
+</ResponseField>
+
+<ResponseField name="data.sent" type="number">
+Valor efetivamente enviado após desconto da taxa.
+</ResponseField>
+
+<ResponseField name="data.destination" type="string">
+Chave PIX de destino.
+</ResponseField>
+
+<ResponseField name="data.mistic" type="object">
+Resposta retornada pela gateway de pagamento.
+</ResponseField>
+
+---
+
+# Erros possíveis
+
+## Valor ausente
+
+```json
+{
+  "error": "VALOR_AUSENTE",
+  "message": "O campo \"amount\" é obrigatório"
+}
+```
+
+---
+
+## PIX ausente
+
+```json
+{
+  "error": "PIX_AUSENTE",
+  "message": "Os campos \"pixKey\" e \"pixKeyType\" são obrigatórios"
+}
+```
+
+---
+
+## Valor inválido
+
+```json
+{
+  "error": "Valor inválido",
+  "message": "O valor deve ser maior que zero"
+}
+```
+
+---
+
+## Saldo insuficiente
+
+```json
+{
+  "error": "SALDO_INSUFICIENTE",
+  "message": "Você não possui saldo suficiente para realizar este envio."
+}
+```
+
+---
+
+## Erro na gateway
+
+```json
+{
+  "error": "Erro ao enviar via Mistic",
+  "message": "Falha na transferência"
+}
+```
+
+---
+
+Este endpoint é usado para **enviar pagamentos ou realizar reembolsos diretamente via PIX utilizando o saldo da conta**.
