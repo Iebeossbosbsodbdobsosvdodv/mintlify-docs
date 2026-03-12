@@ -1,10 +1,20 @@
 ---
-title: "Criar Saque Cripto"
-api: "POST /api/v1/withdraw"
-description: "Solicita um saque do saldo da conta para uma carteira cripto."
+title: "Criar Saque Crypto"
+api: "POST /api/v1/withdraw/crypto"
+description: "Solicita um saque em USDT pela rede BEP20."
 ---
 
-Este endpoint permite retirar saldo da conta para uma **carteira cripto BEP20**.
+Este endpoint permite sacar saldo da conta para uma **carteira USDT na rede BEP20**.
+
+Quando o saque é solicitado, a API:
+
+1. valida o valor
+2. valida o endereço da wallet
+3. verifica se existe saque em processamento
+4. calcula a taxa
+5. debita o saldo da conta
+6. envia o saque para a gateway
+7. adiciona o saque na fila de processamento
 
 ---
 
@@ -27,43 +37,57 @@ Valor máximo | R$3000 |
 
 ---
 
+# Taxa
+
+A taxa aplicada no saque crypto é:
+
+```
+6% + R$2,00
+```
+
+Exemplo:
+
+| Saque | Taxa | Total debitado |
+|------|------|------|
+R$100 | R$8 | R$108 |
+
+---
+
 # Parâmetros
 
 <ParamField body="amount" type="number" required>
 Valor do saque em reais.
 </ParamField>
 
-<ParamField body="type" type="string" required>
-Deve ser definido como:
-
-```
-crypto
-```
-</ParamField>
-
 <ParamField body="wallet" type="string" required>
-Endereço da carteira BEP20.
-
-Formato:
-
-```
-0x + 40 caracteres hexadecimais
-```
-
-Exemplo:
-
-```
-0x742d35Cc6634C0532925a3b844Bc454e4438f44e
-```
+Endereço da carteira USDT na rede BEP20.
 </ParamField>
 
 <ParamField body="description" type="string">
 Descrição opcional do saque.
 </ParamField>
 
-<ParamField body="verificationCode" type="string">
-Código de verificação enviado por e-mail se a segurança de transferências estiver ativa.
-</ParamField>
+---
+
+# Formato da wallet
+
+A carteira deve seguir o padrão:
+
+```
+0x + 40 caracteres hexadecimais
+```
+
+Regex usada pela API:
+
+```
+^0x[a-fA-F0-9]{40}$
+```
+
+Exemplo válido:
+
+```
+0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+```
 
 ---
 
@@ -72,13 +96,13 @@ Código de verificação enviado por e-mail se a segurança de transferências e
 <RequestExample>
 
 ```bash
-curl -X POST "https://api.zynxwallet.com.br/api/v1/withdraw" \
+curl -X POST "https://api.zynxwallet.com.br/api/v1/withdraw/crypto" \
 -H "Content-Type: application/json" \
 -H "X-API-Key: zynx_sua_chave_aqui" \
 -d '{
 "amount": 100,
-"type": "crypto",
-"wallet": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+"wallet": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+"description": "Saque USDT"
 }'
 ```
 
@@ -92,10 +116,22 @@ curl -X POST "https://api.zynxwallet.com.br/api/v1/withdraw" \
 
 ```json
 {
-"success": true,
-"message": "Saque solicitado com sucesso e está sendo processado.",
-"withdrawId": "wd_crypto_123",
-"status": "PROCESSING"
+  "success": true,
+  "message": "Saque crypto adicionado à fila de processamento",
+  "data": {
+    "id": "wd_abc123",
+    "type": "CRYPTO_BEP20",
+    "currency": "USDT",
+    "network": "BEP20",
+    "value": 10000,
+    "valueInReais": 100,
+    "fee": 800,
+    "feeInReais": 8,
+    "wallet": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+    "status": "QUEUED",
+    "jobId": "job_123456",
+    "createdAt": "2026-03-12T19:00:00Z"
+  }
 }
 ```
 
@@ -103,31 +139,61 @@ curl -X POST "https://api.zynxwallet.com.br/api/v1/withdraw" \
 
 ---
 
-# Validação da carteira
+# Status possíveis
 
-A carteira precisa seguir o formato:
+| Status | Descrição |
+|------|-----------|
+QUEUED | saque adicionado à fila |
+PROCESSING | saque sendo processado |
+COMPLETED | saque concluído |
+FAILED | saque falhou |
 
-```
-^0x[a-fA-F0-9]{40}$
-```
+---
 
-Se o formato for inválido:
+# Erros possíveis
+
+## Wallet inválida
 
 ```json
 {
-"error": "Carteira inválida",
-"message": "Formato de carteira BEP20 inválido."
+  "error": "Wallet inválida",
+  "message": "O endereço da wallet deve estar no formato BEP20 (0x seguido de 40 caracteres hexadecimais)"
 }
 ```
 
 ---
 
-# Status possíveis
+## Valor abaixo do mínimo
 
-| Status | Descrição |
-|------|-----------|
-PENDING | saque criado |
-PROCESSING | sendo processado |
-FAILED | falha no saque |
+```json
+{
+  "error": "Valor abaixo do mínimo",
+  "message": "O valor mínimo para saque crypto é R$ 20.00"
+}
+```
 
 ---
+
+## Valor acima do máximo
+
+```json
+{
+  "error": "Valor acima do máximo",
+  "message": "O valor máximo para saque crypto é R$ 3000.00"
+}
+```
+
+---
+
+## Saque em processamento
+
+```json
+{
+  "error": "Saque em processamento",
+  "message": "Você já possui um saque em processamento. Aguarde a conclusão antes de solicitar um novo."
+}
+```
+
+---
+
+Este endpoint cria um **saque crypto USDT na rede BEP20**, adicionando a transação à fila de processamento da plataforma.
